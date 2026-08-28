@@ -1,0 +1,6 @@
+{
+  "name": "CRM Khách Hàng",
+  "description": "Ứng dụng CRM quản lý khách hàng, cơ hội bán hàng, nhân sự, chấm công, tính lương và tùy chỉnh quy chế thâm niên chuyên nghiệp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
