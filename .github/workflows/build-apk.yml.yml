@@ -27,23 +27,6 @@ jobs:
           yes | sdkmanager --licenses || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
 
-      - name: Prepare Configuration & Keystore
-        run: |
-          # Tạo file .env nếu chưa có
-          if [ ! -f .env ]; then
-            touch .env
-          fi
-          if [ -f .env.example ]; then
-            cp .env.example .env
-          fi
-
-          # Tạo file debug.keystore chuẩn
-          if [ -f debug.keystore.base64 ]; then
-            base64 -d debug.keystore.base64 > debug.keystore
-          else
-            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          fi
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -51,10 +34,44 @@ jobs:
 
       - name: Build Debug APK
         run: |
+          # Tự động tìm thư mục chứa tệp settings.gradle.kts
+          SETTINGS_FILE=$(find . -name "settings.gradle.kts" | head -n 1)
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "Searching for settings.gradle..."
+            SETTINGS_FILE=$(find . -name "settings.gradle" | head -n 1)
+          fi
+
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "ERROR: Không tìm thấy file settings.gradle.kts trong repository!"
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$SETTINGS_FILE")
+          echo "Tìm thấy mã nguồn Android tại thư mục: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+
+          # Chuẩn bị file .env
+          if [ ! -f .env ]; then
+            touch .env
+          fi
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          fi
+
+          # Chuẩn bị file keystore
+          if [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          else
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          # Thực hiện đóng gói APK
           gradle assembleDebug --no-daemon --no-configuration-cache --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CRM-App-Debug-APK
-          path: app/build/outputs/apk/debug/*.apk
+          name: Cenatic-CRM-Debug-APK
+          path: |
+            **/app/build/outputs/apk/debug/*.apk
+            **/*.apk
