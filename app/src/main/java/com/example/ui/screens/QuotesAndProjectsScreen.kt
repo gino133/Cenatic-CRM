@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
@@ -84,6 +85,7 @@ import com.example.ui.viewmodel.CrmViewModel
 fun QuotesAndProjectsScreen(
     viewModel: CrmViewModel,
     initialTab: Int = 0,
+    onBack: (() -> Unit)? = null,
     onOpenProfile: () -> Unit = {},
     onCreateQuote: () -> Unit = {},
     onEditQuote: (QuoteItem) -> Unit = {}
@@ -107,30 +109,53 @@ fun QuotesAndProjectsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onOpenProfile() }
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(ProfessionalPrimaryNavy),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("A", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Quay lại",
+                                tint = Color(0xFF0F172A)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                    } else {
+                        Spacer(modifier = Modifier.width(4.dp))
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "CRM Portal",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0F172A)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { onOpenProfile() }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(ProfessionalPrimaryNavy),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("A", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Phòng Kinh Doanh",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A)
+                            )
+                            Text(
+                                text = "Báo giá & Tiến độ dự án",
+                                fontSize = 11.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    }
                 }
 
                 Box(

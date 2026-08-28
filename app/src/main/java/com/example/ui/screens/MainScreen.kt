@@ -97,7 +97,6 @@ enum class NavigationItem(
 ) {
     HOME("Trang chủ", Icons.Filled.Home, Icons.Outlined.Home),
     CUSTOMERS("Khách hàng", Icons.Filled.People, Icons.Outlined.People),
-    QUOTES_PROJECTS("Báo giá", Icons.Filled.Description, Icons.Outlined.Description),
     TASKS("Công việc", Icons.Filled.Checklist, Icons.Outlined.Checklist),
     ACCOUNT("Tài khoản", Icons.Filled.Person, Icons.Outlined.Person)
 }
@@ -107,6 +106,7 @@ enum class FullScreenMode {
     LOGIN,
     ADD_CORPORATE_CUSTOMER,
     ADD_INDIVIDUAL_CUSTOMER,
+    QUOTES_AND_PROJECTS,
     CREATE_QUOTE,
     REPORTS,
     ACCOUNT_OVERVIEW,
@@ -124,7 +124,7 @@ enum class FullScreenMode {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: CrmViewModel) {
-    var isLoggedIn by remember { mutableStateOf(false) }
+    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
     var currentNavIndex by remember { mutableIntStateOf(0) }
     var fullScreenMode by remember { mutableStateOf(FullScreenMode.NONE) }
     var quotesInitialTab by remember { mutableIntStateOf(0) }
@@ -150,14 +150,9 @@ fun MainScreen(viewModel: CrmViewModel) {
 
     if (!isLoggedIn) {
         LoginScreen(
+            userPreferences = viewModel.userPreferences,
             onLoginSuccess = { email, name ->
-                viewModel.updateUserProfile(
-                    viewModel.userProfile.value.copy(
-                        email = email,
-                        fullName = if (name.isNotBlank()) name else viewModel.userProfile.value.fullName
-                    )
-                )
-                isLoggedIn = true
+                viewModel.login(email, name)
             }
         )
         return
@@ -231,6 +226,23 @@ fun MainScreen(viewModel: CrmViewModel) {
             )
             return
         }
+        FullScreenMode.QUOTES_AND_PROJECTS -> {
+            QuotesAndProjectsScreen(
+                viewModel = viewModel,
+                initialTab = quotesInitialTab,
+                onBack = { fullScreenMode = FullScreenMode.NONE },
+                onOpenProfile = { fullScreenMode = FullScreenMode.EDIT_PROFILE },
+                onCreateQuote = {
+                    quoteToEdit = null
+                    fullScreenMode = FullScreenMode.CREATE_QUOTE
+                },
+                onEditQuote = { quote ->
+                    quoteToEdit = quote
+                    fullScreenMode = FullScreenMode.CREATE_QUOTE
+                }
+            )
+            return
+        }
         FullScreenMode.CREATE_QUOTE -> {
             CreateQuoteScreen(
                 viewModel = viewModel,
@@ -239,10 +251,9 @@ fun MainScreen(viewModel: CrmViewModel) {
                     quoteToEdit = null
                     fullScreenMode = FullScreenMode.NONE
                 },
-                onNavigateToTab = { tabIndex ->
+                onNavigateToTab = { _ ->
                     quoteToEdit = null
-                    currentNavIndex = tabIndex
-                    fullScreenMode = FullScreenMode.NONE
+                    fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
                 }
             )
             return
@@ -454,7 +465,6 @@ fun MainScreen(viewModel: CrmViewModel) {
                                 text = when (currentItem) {
                                     NavigationItem.HOME -> "CRM Doanh Nghiệp"
                                     NavigationItem.CUSTOMERS -> "Danh Sách Khách Hàng"
-                                    NavigationItem.QUOTES_PROJECTS -> "Báo Giá & Tiến Độ"
                                     NavigationItem.TASKS -> "Quản Lý Công Việc"
                                     NavigationItem.ACCOUNT -> "Cài Đặt Tài Khoản"
                                 },
@@ -512,7 +522,7 @@ fun MainScreen(viewModel: CrmViewModel) {
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "Thêm khách hàng")
                     }
-                } else if (currentNavIndex == 3) {
+                } else if (currentNavIndex == 2) {
                     // Tasks tab FAB
                     FloatingActionButton(
                         onClick = {
@@ -545,13 +555,13 @@ fun MainScreen(viewModel: CrmViewModel) {
                             onNavigateToCustomers = { currentNavIndex = 1 },
                             onNavigateToQuotes = {
                                 quotesInitialTab = 0
-                                currentNavIndex = 2
+                                fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
                             },
                             onNavigateToProjects = {
                                 quotesInitialTab = 1
-                                currentNavIndex = 2
+                                fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
                             },
-                            onNavigateToTasks = { currentNavIndex = 3 },
+                            onNavigateToTasks = { currentNavIndex = 2 },
                             onOpenCustomerDetail = { id -> viewModel.selectCustomer(id) },
                             onOpenProfile = { fullScreenMode = FullScreenMode.EDIT_PROFILE },
                             onOpenReports = { fullScreenMode = FullScreenMode.REPORTS },
@@ -592,19 +602,6 @@ fun MainScreen(viewModel: CrmViewModel) {
                                 fullScreenMode = FullScreenMode.ADD_INDIVIDUAL_CUSTOMER
                             }
                         )
-                        NavigationItem.QUOTES_PROJECTS -> QuotesAndProjectsScreen(
-                            viewModel = viewModel,
-                            initialTab = quotesInitialTab,
-                            onOpenProfile = { fullScreenMode = FullScreenMode.EDIT_PROFILE },
-                            onCreateQuote = {
-                                quoteToEdit = null
-                                fullScreenMode = FullScreenMode.CREATE_QUOTE
-                            },
-                            onEditQuote = { quote ->
-                                quoteToEdit = quote
-                                fullScreenMode = FullScreenMode.CREATE_QUOTE
-                            }
-                        )
                         NavigationItem.TASKS -> TasksScreen(
                             viewModel = viewModel,
                             onEditTask = { task ->
@@ -630,6 +627,10 @@ fun MainScreen(viewModel: CrmViewModel) {
                         NavigationItem.ACCOUNT -> SettingsHubScreen(
                             viewModel = viewModel,
                             onNavigateToEditProfile = { fullScreenMode = FullScreenMode.EDIT_PROFILE },
+                            onNavigateToQuotes = {
+                                quotesInitialTab = 0
+                                fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
+                            },
                             onNavigateToEmployees = { fullScreenMode = FullScreenMode.EMPLOYEES },
                             onNavigateToTimekeeping = { fullScreenMode = FullScreenMode.TIMEKEEPING },
                             onNavigateToPayroll = { fullScreenMode = FullScreenMode.PAYROLL },
@@ -640,7 +641,7 @@ fun MainScreen(viewModel: CrmViewModel) {
                             onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE },
                             onNavigateToReports = { fullScreenMode = FullScreenMode.REPORTS },
                             onNavigateToOverview = { fullScreenMode = FullScreenMode.ACCOUNT_OVERVIEW },
-                            onLogout = { isLoggedIn = false }
+                            onLogout = { viewModel.logout() }
                         )
                     }
                 }

@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
+import com.example.data.local.LocalAccount
+import com.example.data.local.UserPreferences
 import com.example.data.model.AttendanceRecord
 import com.example.data.model.AttendanceType
 import com.example.data.model.CustomerEntity
@@ -81,6 +83,7 @@ data class DashboardMetrics(
 )
 
 class CrmViewModel(application: Application) : AndroidViewModel(application) {
+    val userPreferences = UserPreferences(application)
     private val database = AppDatabase.getDatabase(application)
     private val repository = CrmRepository(
         database.customerDao(),
@@ -569,11 +572,11 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Additional States matching user's exact design mockups
-    private val _isLoggedIn = MutableStateFlow(true)
+    // Additional States matching user's exact design mockups with persistent storage
+    private val _isLoggedIn = MutableStateFlow(userPreferences.isLoggedIn())
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    private val _userProfile = MutableStateFlow(UserProfile())
+    private val _userProfile = MutableStateFlow(userPreferences.getUserProfile())
     val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
 
     private val _notificationSettings = MutableStateFlow(NotificationSettings())
@@ -809,23 +812,39 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     val attendanceRecords: StateFlow<List<AttendanceRecord>> = _attendanceRecords.asStateFlow()
 
     // Actions for User, Auth & Settings
-    fun login(email: String, pass: String) {
+    fun login(email: String, name: String = "") {
         _isLoggedIn.value = true
+        userPreferences.setLoggedIn(true)
+        if (email.isNotBlank()) {
+            val current = _userProfile.value
+            val updated = current.copy(
+                email = email.trim(),
+                fullName = if (name.isNotBlank()) name.trim() else current.fullName,
+                isVip = true, // Ensure default/logged in account is VIP per user request
+                role = "VIP ENTERPRISE"
+            )
+            _userProfile.value = updated
+            userPreferences.saveUserProfile(updated)
+        }
     }
 
     fun logout() {
         _isLoggedIn.value = false
+        userPreferences.setLoggedIn(false)
     }
 
     fun updateUserProfile(profile: UserProfile) {
         _userProfile.value = profile
+        userPreferences.saveUserProfile(profile)
     }
 
     fun setVipStatus(isVip: Boolean) {
-        _userProfile.value = _userProfile.value.copy(
+        val updated = _userProfile.value.copy(
             isVip = isVip,
             role = if (isVip) "VIP ENTERPRISE" else "ADMIN"
         )
+        _userProfile.value = updated
+        userPreferences.saveUserProfile(updated)
     }
 
     fun toggleVipStatus() {

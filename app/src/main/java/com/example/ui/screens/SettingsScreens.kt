@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import android.app.DatePickerDialog
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,6 +44,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.EventBusy
@@ -101,14 +103,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Calendar
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import androidx.compose.material.icons.filled.CardGiftcard
@@ -176,6 +182,7 @@ enum class SettingsSubScreen {
 fun SettingsHubScreen(
     viewModel: CrmViewModel,
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToQuotes: () -> Unit = {},
     onNavigateToEmployees: () -> Unit,
     onNavigateToTimekeeping: () -> Unit,
     onNavigateToPayroll: () -> Unit,
@@ -355,6 +362,16 @@ fun SettingsHubScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column {
+                SettingsRowItem(
+                    icon = Icons.Default.Description,
+                    title = "Phòng kinh doanh - Báo giá & Tiến độ",
+                    subtitle = "Quản lý báo giá, hợp đồng & tiến độ thực hiện dự án",
+                    badge = "HOT",
+                    badgeBg = Color(0xFFEFF6FF),
+                    badgeColor = Color(0xFF1D4ED8),
+                    onClick = onNavigateToQuotes
+                )
+                HorizontalDivider(color = Color(0xFFF1F5F9))
                 SettingsRowItem(
                     icon = Icons.Default.TrendingUp,
                     title = "Báo cáo thống kê hiệu suất",
@@ -789,19 +806,61 @@ fun ProfileEditScreen(
     viewModel: CrmViewModel,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val currentProfile by viewModel.userProfile.collectAsStateWithLifecycle()
     var name by remember { mutableStateOf(currentProfile.fullName) }
     var email by remember { mutableStateOf(currentProfile.email) }
-    var phone by remember { mutableStateOf(currentProfile.phone) }
-    var dob by remember { mutableStateOf(currentProfile.dob) }
-    var address by remember { mutableStateOf(currentProfile.address) }
-    var avatarUri by remember { mutableStateOf(currentProfile.avatarUrl) }
 
     var selectedCountry by remember {
-        val initialCountry = countryDialList.firstOrNull { phone.startsWith(it.dialCode) } ?: countryDialList[0]
+        val initialCountry = countryDialList.firstOrNull { currentProfile.phone.startsWith(it.dialCode) } ?: countryDialList[0]
         mutableStateOf(initialCountry)
     }
+
+    val initialPhone = remember(currentProfile.phone, selectedCountry) {
+        val withoutDial = currentProfile.phone.removePrefix(selectedCountry.dialCode).trim()
+        if (withoutDial.startsWith("0")) withoutDial.dropWhile { it == '0' } else withoutDial
+    }
+    var phone by remember { mutableStateOf(initialPhone) }
+
+    var dobValue by remember {
+        mutableStateOf(TextFieldValue(currentProfile.dob, TextRange(currentProfile.dob.length)))
+    }
+
+    var address by remember { mutableStateOf(currentProfile.address) }
+    var avatarUri by remember { mutableStateOf(currentProfile.avatarUrl) }
     var expandedCountryDropdown by remember { mutableStateOf(false) }
+
+    fun showDatePickerDialog() {
+        val cal = Calendar.getInstance()
+        val dateStr = dobValue.text
+        if (dateStr.isNotBlank()) {
+            try {
+                val parts = dateStr.split("/", "-")
+                if (parts.size == 3) {
+                    val d = parts[0].trim().toIntOrNull() ?: 1
+                    val m = (parts[1].trim().toIntOrNull() ?: 1) - 1
+                    val y = parts[2].trim().toIntOrNull() ?: cal.get(Calendar.YEAR)
+                    cal.set(y, m, d)
+                }
+            } catch (_: Exception) {}
+        }
+        val year = cal.get(Calendar.YEAR)
+        val month = cal.get(Calendar.MONTH)
+        val day = cal.get(Calendar.DAY_OF_MONTH)
+
+        DatePickerDialog(
+            context,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                val formattedDay = String.format("%02d", selectedDay)
+                val formattedMonth = String.format("%02d", selectedMonth + 1)
+                val formattedDate = "$formattedDay/$formattedMonth/$selectedYear"
+                dobValue = TextFieldValue(formattedDate, TextRange(formattedDate.length))
+            },
+            year,
+            month,
+            day
+        ).show()
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -943,7 +1002,7 @@ fun ProfileEditScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 3. Số điện thoại: Dạng number & có tùy chọn quốc gia
+                    // 3. Số điện thoại: Dạng number & có tùy chọn quốc gia (bỏ số 0 đầu)
                     FormFieldLabel("Số điện thoại")
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1005,14 +1064,18 @@ fun ProfileEditScreen(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        // Phone Number Input
+                        // Phone Number Input (bỏ số 0 đầu tiên)
                         OutlinedTextField(
                             value = phone,
                             onValueChange = { input ->
-                                // Only allow numeric digits
-                                phone = input.filter { it.isDigit() || it == ' ' }
+                                // Only allow numeric digits and remove leading 0
+                                var digits = input.filter { it.isDigit() }
+                                if (digits.startsWith("0")) {
+                                    digits = digits.dropWhile { it == '0' }
+                                }
+                                phone = digits
                             },
-                            placeholder = { Text("0901234567", color = Color(0xFF94A3B8)) },
+                            placeholder = { Text("901234567", color = Color(0xFF94A3B8)) },
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("admin_phone_input"),
@@ -1031,15 +1094,34 @@ fun ProfileEditScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 4. Ngày sinh: Định dạng MM/DD/YYYY
-                    FormFieldLabel("Ngày sinh (mm/dd/yyyy)")
+                    // 4. Ngày sinh: Định dạng DD/MM/YYYY
+                    FormFieldLabel("Ngày sinh (dd/mm/yyyy)")
                     OutlinedTextField(
-                        value = dob,
-                        onValueChange = { input ->
-                            // Auto-format MM/DD/YYYY
-                            dob = formatMmDdYyyy(input)
+                        value = dobValue,
+                        onValueChange = { newTfv ->
+                            val newText = newTfv.text
+                            // If backspacing
+                            if (newText.length < dobValue.text.length) {
+                                dobValue = newTfv
+                                return@OutlinedTextField
+                            }
+                            // Take max 8 digits
+                            val digits = newText.filter { it.isDigit() }.take(8)
+                            val formatted = buildString {
+                                for (i in digits.indices) {
+                                    append(digits[i])
+                                    if ((i == 1 || i == 3) && i < digits.lastIndex) {
+                                        append("/")
+                                    }
+                                }
+                            }
+                            // Set cursor at the end of formatted string so cursor never rewinds backwards
+                            dobValue = TextFieldValue(
+                                text = formatted,
+                                selection = TextRange(formatted.length)
+                            )
                         },
-                        placeholder = { Text("MM/DD/YYYY (VD: 08/25/1990)", color = Color(0xFF94A3B8)) },
+                        placeholder = { Text("dd/mm/yyyy (VD: 25/08/1990)", color = Color(0xFF94A3B8)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("admin_dob_input"),
@@ -1051,7 +1133,24 @@ fun ProfileEditScreen(
                             imeAction = ImeAction.Next
                         ),
                         leadingIcon = {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(20.dp))
+                            IconButton(onClick = { showDatePickerDialog() }) {
+                                Icon(
+                                    Icons.Default.CalendarMonth,
+                                    contentDescription = "Chọn ngày sinh",
+                                    tint = ProfessionalPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePickerDialog() }) {
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    contentDescription = "Mở lịch chọn ngày",
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     )
 
@@ -1086,15 +1185,17 @@ fun ProfileEditScreen(
 
             Button(
                 onClick = {
+                    val savedPhone = if (phone.startsWith("0")) phone.dropWhile { it == '0' } else phone
                     viewModel.updateUserProfile(
                         UserProfile(
-                            fullName = name,
-                            email = email,
-                            phone = phone,
-                            dob = dob,
+                            fullName = name.ifBlank { currentProfile.fullName },
+                            email = email.ifBlank { currentProfile.email },
+                            phone = savedPhone,
+                            dob = dobValue.text.ifBlank { currentProfile.dob },
                             address = address,
                             role = currentProfile.role,
-                            avatarUrl = avatarUri
+                            avatarUrl = avatarUri,
+                            isVip = currentProfile.isVip
                         )
                     )
                     onBack()

@@ -586,14 +586,14 @@ fun calculateEmployeePayroll(
 
 // User Profile model
 data class UserProfile(
-    val fullName: String = "Nguyễn Văn A",
-    val email: String = "nguyenvana@example.com",
-    val phone: String = "0901234567",
+    val fullName: String = "Quản Trị Viên VIP",
+    val email: String = "admin@crm.vn",
+    val phone: String = "901234567",
     val dob: String = "01/01/1990",
     val address: String = "123 Đường Lê Lợi, Quận 1, TP.HCM",
-    val role: String = "ADMIN",
+    val role: String = "VIP ENTERPRISE",
     val avatarUrl: String? = null,
-    val isVip: Boolean = false
+    val isVip: Boolean = true
 )
 
 // Notification Settings model

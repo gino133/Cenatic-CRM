@@ -80,6 +80,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.data.local.LocalAccount
+import com.example.data.local.UserPreferences
 import com.example.ui.theme.ProfessionalPrimary
 import com.example.ui.theme.ProfessionalPrimaryNavy
 
@@ -103,34 +105,29 @@ data class RegisteredAccount(
 
 @Composable
 fun LoginScreen(
+    userPreferences: UserPreferences? = null,
     onLoginSuccess: (email: String, name: String) -> Unit
 ) {
     var authMode by remember { mutableStateOf(AuthMode.LOGIN) }
     var registerOption by remember { mutableStateOf(RegisterOption.GMAIL) }
 
-    // Account Store in-memory for testing both flows
+    // Account Store backed by SharedPreferences
     val accounts = remember {
-        mutableStateListOf(
+        val saved = userPreferences?.getRegisteredAccounts()?.map {
             RegisteredAccount(
-                email = "admin@nexus.crm",
-                password = "admin",
-                fullName = "Quản Trị Viên CRM",
-                isVerified = true,
-                isGoogle = false
-            ),
-            RegisteredAccount(
-                email = "hakirotomo@gmail.com",
-                password = "",
-                fullName = "Tomo Nguyen",
-                isVerified = true,
-                isGoogle = true
+                email = it.email,
+                password = it.password,
+                fullName = it.fullName,
+                isVerified = it.isVerified,
+                isGoogle = it.isGoogle
             )
-        )
+        } ?: emptyList()
+        mutableStateListOf<RegisteredAccount>().apply { addAll(saved) }
     }
 
-    // Login Form State
-    var loginEmail by remember { mutableStateOf("admin@nexus.crm") }
-    var loginPassword by remember { mutableStateOf("admin") }
+    // Login Form State - Blank by default so fresh app install is completely clean and secure
+    var loginEmail by remember { mutableStateOf("") }
+    var loginPassword by remember { mutableStateOf("") }
     var isLoginPasswordVisible by remember { mutableStateOf(false) }
     var loginErrorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -379,6 +376,7 @@ fun LoginScreen(
                                             email = loginEmail,
                                             password = loginPassword,
                                             accounts = accounts,
+                                            userPreferences = userPreferences,
                                             onError = { loginErrorMessage = it },
                                             onUnverified = {
                                                 pendingVerificationAccount = it
@@ -424,6 +422,7 @@ fun LoginScreen(
                                             email = loginEmail,
                                             password = loginPassword,
                                             accounts = accounts,
+                                            userPreferences = userPreferences,
                                             onError = { loginErrorMessage = it },
                                             onUnverified = {
                                                 pendingVerificationAccount = it
@@ -922,6 +921,15 @@ fun LoginScreen(
                                                 isGoogle = false
                                             )
                                             accounts.add(newAccount)
+                                            userPreferences?.saveRegisteredAccount(
+                                                LocalAccount(
+                                                    email = newAccount.email,
+                                                    password = newAccount.password,
+                                                    fullName = newAccount.fullName,
+                                                    isVerified = false,
+                                                    isGoogle = false
+                                                )
+                                            )
                                             pendingVerificationAccount = newAccount
                                             showVerificationEmailDialog = true
                                         },
@@ -949,6 +957,11 @@ fun LoginScreen(
 
     // ==================== GOOGLE ACCOUNT SELECTOR DIALOG (AUTO LINK) ====================
     if (showGoogleAccountSelectorDialog) {
+        var customGoogleEmail by remember { mutableStateOf("") }
+        var customGoogleName by remember { mutableStateOf("") }
+        var googleError by remember { mutableStateOf<String?>(null) }
+        val savedGoogleAccounts = accounts.filter { it.isGoogle }
+
         Dialog(onDismissRequest = { showGoogleAccountSelectorDialog = false }) {
             Card(
                 modifier = Modifier
@@ -958,7 +971,9 @@ fun LoginScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier
+                        .padding(22.dp)
+                        .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Row(
@@ -975,44 +990,148 @@ fun LoginScreen(
                                 color = Color(0xFF0F172A)
                             )
                             Text(
-                                text = "Chọn tài khoản Google để liên kết tự động",
+                                text = "Liên kết tài khoản Google an toàn",
                                 fontSize = 12.sp,
                                 color = Color(0xFF64748B)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    if (savedGoogleAccounts.isNotEmpty()) {
+                        Text(
+                            text = "Tài khoản đã lưu trên thiết bị:",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF475569),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        )
+                        savedGoogleAccounts.forEach { acc ->
+                            GoogleAccountItem(
+                                name = acc.fullName.ifBlank { acc.email },
+                                email = acc.email,
+                                avatarChar = acc.fullName.firstOrNull()?.toString()?.uppercase() ?: "G",
+                                onClick = {
+                                    showGoogleAccountSelectorDialog = false
+                                    onLoginSuccess(acc.email, acc.fullName)
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = Color(0xFFF1F5F9))
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    Text(
+                        text = if (savedGoogleAccounts.isNotEmpty()) "Hoặc nhập tài khoản Google khác:" else "Nhập tài khoản Google của bạn:",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF475569),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = customGoogleEmail,
+                        onValueChange = {
+                            customGoogleEmail = it.trim()
+                            googleError = null
+                        },
+                        label = { Text("Địa chỉ Gmail", fontSize = 12.sp) },
+                        placeholder = { Text("tenban@gmail.com", color = Color(0xFF94A3B8), fontSize = 13.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        singleLine = true,
+                        colors = customFieldColors(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                        leadingIcon = {
+                            Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
+                        }
+                    )
+
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Option 1: Current Google User
-                    GoogleAccountItem(
-                        name = "Tomo Nguyen",
-                        email = "hakirotomo@gmail.com",
-                        avatarChar = "T",
-                        onClick = {
-                            showGoogleAccountSelectorDialog = false
-                            // Auto link and login
-                            onLoginSuccess("hakirotomo@gmail.com", "Tomo Nguyen")
+                    OutlinedTextField(
+                        value = customGoogleName,
+                        onValueChange = { customGoogleName = it },
+                        label = { Text("Họ và tên (Tùy chọn)", fontSize = 12.sp) },
+                        placeholder = { Text("Nguyễn Văn A", color = Color(0xFF94A3B8), fontSize = 13.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        singleLine = true,
+                        colors = customFieldColors(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
+                        leadingIcon = {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Option 2: Kinetic Enterprise Admin
-                    GoogleAccountItem(
-                        name = "Kinetic Enterprise",
-                        email = "admin.kinetic@gmail.com",
-                        avatarChar = "K",
-                        onClick = {
-                            showGoogleAccountSelectorDialog = false
-                            // Auto link and login
-                            onLoginSuccess("admin.kinetic@gmail.com", "Kinetic Enterprise")
-                        }
-                    )
+                    if (googleError != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = googleError ?: "",
+                            color = Color(0xFFDC2626),
+                            fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            if (customGoogleEmail.isBlank() || !customGoogleEmail.contains("@")) {
+                                googleError = "Vui lòng nhập địa chỉ Gmail hợp lệ"
+                                return@Button
+                            }
+                            val displayName = if (customGoogleName.isNotBlank()) {
+                                customGoogleName.trim()
+                            } else {
+                                customGoogleEmail.substringBefore("@").replace(".", " ")
+                                    .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+                            }
+                            val newGoogleAcc = RegisteredAccount(
+                                email = customGoogleEmail,
+                                password = "",
+                                fullName = displayName,
+                                isVerified = true,
+                                isGoogle = true
+                            )
+                            accounts.removeAll { it.email.equals(customGoogleEmail, ignoreCase = true) }
+                            accounts.add(newGoogleAcc)
+                            userPreferences?.saveRegisteredAccount(
+                                LocalAccount(
+                                    email = newGoogleAcc.email,
+                                    password = "",
+                                    fullName = newGoogleAcc.fullName,
+                                    isVerified = true,
+                                    isGoogle = true
+                                )
+                            )
+                            showGoogleAccountSelectorDialog = false
+                            onLoginSuccess(newGoogleAcc.email, newGoogleAcc.fullName)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(46.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimaryNavy)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            GoogleGIcon()
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Tiếp tục với Google", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     OutlinedButton(
                         onClick = { showGoogleAccountSelectorDialog = false },
@@ -1132,6 +1251,7 @@ fun LoginScreen(
                                 onClick = {
                                     // Verify account
                                     account.isVerified = true
+                                    userPreferences?.updateAccountVerification(account.email, true)
                                     showVerificationEmailDialog = false
                                     showActivationSuccessDialog = true
                                 },
@@ -1247,7 +1367,8 @@ fun LoginScreen(
 private fun performLogin(
     email: String,
     password: String,
-    accounts: List<RegisteredAccount>,
+    accounts: MutableList<RegisteredAccount>,
+    userPreferences: UserPreferences?,
     onError: (String) -> Unit,
     onUnverified: (RegisteredAccount) -> Unit,
     onSuccess: (email: String, name: String) -> Unit
@@ -1261,8 +1382,33 @@ private fun performLogin(
     val account = accounts.find { it.email.equals(trimmedEmail, ignoreCase = true) }
 
     if (account == null) {
-        onError("Tài khoản không tồn tại. Vui lòng kiểm tra lại hoặc chuyển sang tab Đăng ký.")
-        return
+        // If account not registered yet: allow direct sign-in for valid credentials and register locally
+        if (trimmedEmail.contains("@") && password.length >= 3) {
+            val displayName = trimmedEmail.substringBefore("@").replace(".", " ")
+                .split(" ").joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+            val newAcc = RegisteredAccount(
+                email = trimmedEmail,
+                password = password,
+                fullName = displayName,
+                isVerified = true,
+                isGoogle = false
+            )
+            accounts.add(newAcc)
+            userPreferences?.saveRegisteredAccount(
+                LocalAccount(
+                    email = newAcc.email,
+                    password = newAcc.password,
+                    fullName = newAcc.fullName,
+                    isVerified = true,
+                    isGoogle = false
+                )
+            )
+            onSuccess(newAcc.email, newAcc.fullName)
+            return
+        } else {
+            onError("Tài khoản chưa đăng ký. Vui lòng chuyển sang tab Đăng ký để tạo tài khoản mới.")
+            return
+        }
     }
 
     if (!account.isGoogle && account.password.isNotBlank() && account.password != password) {
