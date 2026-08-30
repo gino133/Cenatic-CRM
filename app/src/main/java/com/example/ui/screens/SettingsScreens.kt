@@ -1,9 +1,9 @@
 package com.example.ui.screens
 
-import android.app.DatePickerDialog
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.ui.components.AppDatePickerDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -829,37 +829,18 @@ fun ProfileEditScreen(
     var address by remember { mutableStateOf(currentProfile.address) }
     var avatarUri by remember { mutableStateOf(currentProfile.avatarUrl) }
     var expandedCountryDropdown by remember { mutableStateOf(false) }
+    var showCustomDatePicker by remember { mutableStateOf(false) }
 
-    fun showDatePickerDialog() {
-        val cal = Calendar.getInstance()
-        val dateStr = dobValue.text
-        if (dateStr.isNotBlank()) {
-            try {
-                val parts = dateStr.split("/", "-")
-                if (parts.size == 3) {
-                    val d = parts[0].trim().toIntOrNull() ?: 1
-                    val m = (parts[1].trim().toIntOrNull() ?: 1) - 1
-                    val y = parts[2].trim().toIntOrNull() ?: cal.get(Calendar.YEAR)
-                    cal.set(y, m, d)
-                }
-            } catch (_: Exception) {}
-        }
-        val year = cal.get(Calendar.YEAR)
-        val month = cal.get(Calendar.MONTH)
-        val day = cal.get(Calendar.DAY_OF_MONTH)
-
-        DatePickerDialog(
-            context,
-            { _, selectedYear, selectedMonth, selectedDay ->
-                val formattedDay = String.format("%02d", selectedDay)
-                val formattedMonth = String.format("%02d", selectedMonth + 1)
-                val formattedDate = "$formattedDay/$formattedMonth/$selectedYear"
+    if (showCustomDatePicker) {
+        AppDatePickerDialog(
+            initialDateStr = dobValue.text,
+            title = "Chọn ngày sinh",
+            onDismiss = { showCustomDatePicker = false },
+            onDateSelected = { formattedDate ->
                 dobValue = TextFieldValue(formattedDate, TextRange(formattedDate.length))
-            },
-            year,
-            month,
-            day
-        ).show()
+                showCustomDatePicker = false
+            }
+        )
     }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -1133,7 +1114,7 @@ fun ProfileEditScreen(
                             imeAction = ImeAction.Next
                         ),
                         leadingIcon = {
-                            IconButton(onClick = { showDatePickerDialog() }) {
+                            IconButton(onClick = { showCustomDatePicker = true }) {
                                 Icon(
                                     Icons.Default.CalendarMonth,
                                     contentDescription = "Chọn ngày sinh",
@@ -1143,7 +1124,7 @@ fun ProfileEditScreen(
                             }
                         },
                         trailingIcon = {
-                            IconButton(onClick = { showDatePickerDialog() }) {
+                            IconButton(onClick = { showCustomDatePicker = true }) {
                                 Icon(
                                     Icons.Default.DateRange,
                                     contentDescription = "Mở lịch chọn ngày",

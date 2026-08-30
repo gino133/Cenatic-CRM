@@ -1,6 +1,6 @@
 package com.example.ui.screens
 
-import android.app.DatePickerDialog
+import com.example.ui.components.AppDatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -213,24 +213,25 @@ fun AddCustomerFormScreen(
         mutableStateOf(existingCustomer?.address ?: "")
     }
 
+    var activeDatePickerTarget by remember { mutableStateOf<((String) -> Unit)?>(null) }
+    var activeDatePickerCurrentDate by remember { mutableStateOf("") }
+
+    if (activeDatePickerTarget != null) {
+        AppDatePickerDialog(
+            initialDateStr = activeDatePickerCurrentDate,
+            title = "Chọn ngày sinh",
+            onDismiss = { activeDatePickerTarget = null },
+            onDateSelected = { selected ->
+                activeDatePickerTarget?.invoke(selected)
+                activeDatePickerTarget = null
+            }
+        )
+    }
+
     // Date picker dialog helper
     fun showDatePicker(currentDateStr: String, onDateSelected: (String) -> Unit) {
-        val calendar = parseDateOrDefault(currentDateStr)
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        DatePickerDialog(
-            context,
-            { _, selectedYear, selectedMonth, selectedDay ->
-                val formattedDay = String.format("%02d", selectedDay)
-                val formattedMonth = String.format("%02d", selectedMonth + 1)
-                onDateSelected("$formattedDay/$formattedMonth/$selectedYear")
-            },
-            year,
-            month,
-            day
-        ).show()
+        activeDatePickerCurrentDate = currentDateStr
+        activeDatePickerTarget = onDateSelected
     }
 
     val primaryBlue = Color(0xFF0057D9)

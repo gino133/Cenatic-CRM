@@ -550,7 +550,12 @@ fun CustomerDetailScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text(task.title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+                                            Text(
+                                                task.title,
+                                                fontWeight = FontWeight.SemiBold,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = if (task.isCompleted) Color(0xFF16A34A) else MaterialTheme.colorScheme.onSurface
+                                            )
                                             TaskTypeBadge(type = taskType)
                                         }
 
