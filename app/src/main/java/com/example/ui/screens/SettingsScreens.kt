@@ -88,6 +88,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -251,6 +253,11 @@ fun SettingsHubScreen(
     onLogout: () -> Unit
 ) {
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showVipUpgradeDialog by remember { mutableStateOf<String?>(null) }
+    var showBusinessUpgradeDialog by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -358,7 +365,7 @@ fun SettingsHubScreen(
                     .fillMaxWidth()
                     .background(
                         brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF3B82F6), Color(0xFF1D4ED8))
+                            colors = listOf(Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6))
                         )
                     )
                     .padding(16.dp)
@@ -378,7 +385,7 @@ fun SettingsHubScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Nâng cấp gói Doanh nghiệp",
+                                text = "Nâng cấp VIP & Doanh nghiệp",
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
                                 fontSize = 15.sp
@@ -386,7 +393,7 @@ fun SettingsHubScreen(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Mở khóa báo cáo chuyên sâu & không giới hạn nhân viên",
+                            text = "Gói VIP cho Cá nhân & Gói BUSINESS cho Doanh nghiệp",
                             color = Color(0xFFDBEAFE),
                             fontSize = 12.sp
                         )
@@ -417,9 +424,10 @@ fun SettingsHubScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column {
+                // 1. Báo giá & Tiến độ
                 SettingsRowItem(
                     icon = Icons.Default.Description,
-                    title = "Phòng kinh doanh - Báo giá & Tiến độ",
+                    title = "Báo giá & Tiến độ",
                     subtitle = "Quản lý báo giá, hợp đồng & tiến độ thực hiện dự án",
                     badge = "HOT",
                     badgeBg = Color(0xFFEFF6FF),
@@ -427,35 +435,55 @@ fun SettingsHubScreen(
                     onClick = onNavigateToQuotes
                 )
                 HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                // 2. Hiệu suất & KPIs
                 SettingsRowItem(
                     icon = Icons.Default.TrendingUp,
-                    title = "Báo cáo thống kê hiệu suất",
-                    subtitle = "Doanh thu, tỷ lệ chốt deal và tăng trưởng",
-                    onClick = onNavigateToReports
-                )
-                HorizontalDivider(color = Color(0xFFF1F5F9))
-                SettingsRowItem(
-                    icon = Icons.Default.SupervisorAccount,
-                    title = "Tổng quan tài khoản & KPI",
-                    subtitle = "Xem tiến độ đạt chỉ tiêu tháng",
+                    title = "Hiệu suất & KPIs",
+                    subtitle = "Xem tiến độ đạt chỉ tiêu tháng & kết quả cá nhân",
                     onClick = onNavigateToOverview
                 )
                 HorizontalDivider(color = Color(0xFFF1F5F9))
-                SettingsRowItem(
-                    icon = Icons.Default.SupervisorAccount,
-                    title = "Quản lý nhân viên",
-                    subtitle = "Nhân sự, chấm công, bảng lương & thâm niên",
-                    badge = "VIP",
-                    badgeBg = Color(0xFFFEF3C7),
-                    badgeColor = Color(0xFFD97706),
-                    onClick = onNavigateToEmployees
-                )
-                HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                // 3. Phân loại khách hàng (VIP)
                 SettingsRowItem(
                     icon = Icons.Default.Star,
                     title = "Phân loại khách hàng",
-                    subtitle = "Tùy chỉnh nhóm, phân hạng khách hàng",
-                    onClick = onNavigateToCustomerTypes
+                    subtitle = "Tùy chỉnh nhóm, phân hạng khách hàng chuyên sâu",
+                    badge = "VIP",
+                    badgeBg = Color(0xFFFEF3C7),
+                    badgeColor = Color(0xFFD97706),
+                    onClick = {
+                        showVipUpgradeDialog = "Phân loại khách hàng (VIP)"
+                    }
+                )
+                HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                // 4. Quản lý nhân sự (BUSINESS)
+                SettingsRowItem(
+                    icon = Icons.Default.SupervisorAccount,
+                    title = "Quản lý nhân sự",
+                    subtitle = "Nhân sự, chấm công, bảng lương & thâm niên",
+                    badge = "BUSINESS",
+                    badgeBg = Color(0xFFEDE9FE),
+                    badgeColor = Color(0xFF7C3AED),
+                    onClick = {
+                        showBusinessUpgradeDialog = "Quản lý nhân sự (BUSINESS)"
+                    }
+                )
+                HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                // 5. Báo cáo thống kê (BUSINESS)
+                SettingsRowItem(
+                    icon = Icons.Default.TrendingUp,
+                    title = "Báo cáo thống kê",
+                    subtitle = "Doanh thu, tỷ lệ chốt deal và phân tích tăng trưởng",
+                    badge = "BUSINESS",
+                    badgeBg = Color(0xFFEDE9FE),
+                    badgeColor = Color(0xFF7C3AED),
+                    onClick = {
+                        showBusinessUpgradeDialog = "Báo cáo thống kê (BUSINESS)"
+                    }
                 )
             }
         }
@@ -475,9 +503,6 @@ fun SettingsHubScreen(
                     icon = Icons.Default.ManageAccounts,
                     title = "Cài đặt tài khoản",
                     subtitle = "Thông tin cá nhân, giao diện, ngôn ngữ & bảo mật",
-                    badge = "MỚI",
-                    badgeBg = Color(0xFFEFF6FF),
-                    badgeColor = Color(0xFF1D4ED8),
                     onClick = onNavigateToAccountSettings
                 )
                 HorizontalDivider(color = Color(0xFFF1F5F9))
@@ -497,11 +522,8 @@ fun SettingsHubScreen(
                 HorizontalDivider(color = Color(0xFFF1F5F9))
                 SettingsRowItem(
                     icon = Icons.Default.CloudSync,
-                    title = "Sao lưu & Đồng bộ đám mây",
+                    title = "Sao lưu và đồng bộ",
                     subtitle = "Lưu trữ Google Drive, xuất dữ liệu Excel & phục hồi",
-                    badge = "CLOUD",
-                    badgeBg = Color(0xFFF0FDF4),
-                    badgeColor = Color(0xFF16A34A),
                     onClick = onNavigateToBackupSync
                 )
             }
@@ -529,6 +551,191 @@ fun SettingsHubScreen(
         }
 
         Spacer(modifier = Modifier.height(30.dp))
+    }
+
+    // ================= VIP UPGRADE PAYWALL DIALOG =================
+    showVipUpgradeDialog?.let { featureName ->
+        AlertDialog(
+            onDismissRequest = { showVipUpgradeDialog = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Tính năng Gói VIP Cá nhân",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F172A)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Mục \"$featureName\" thuộc gói VIP dành cho cá nhân chuyên nghiệp.",
+                        fontSize = 13.sp,
+                        color = Color(0xFF475569),
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        color = Color(0xFFFFFBEB),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "✨ Đăng ký dùng thử MIỄN PHÍ:",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = Color(0xFFB45309)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Hiện tại trong giai đoạn trải nghiệm, bạn chỉ cần bấm \"Đăng ký sử dụng\" là có thể trải nghiệm ngay tính năng này!",
+                                fontSize = 12.sp,
+                                color = Color(0xFF92400E)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showVipUpgradeDialog = null
+                        onNavigateToCustomerTypes()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Đăng ký sử dụng", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        showVipUpgradeDialog = null
+                        onNavigateToUpgrade()
+                    }) {
+                        Text("Xem gói VIP", color = ProfessionalPrimary)
+                    }
+                    TextButton(onClick = { showVipUpgradeDialog = null }) {
+                        Text("Đóng", color = Color(0xFF64748B))
+                    }
+                }
+            }
+        )
+    }
+
+    // ================= BUSINESS UPGRADE PAYWALL DIALOG =================
+    showBusinessUpgradeDialog?.let { featureName ->
+        AlertDialog(
+            onDismissRequest = { showBusinessUpgradeDialog = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFEDE9FE)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Apartment,
+                        contentDescription = null,
+                        tint = Color(0xFF7C3AED),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Tính năng Gói BUSINESS Doanh nghiệp",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F172A)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Mục \"$featureName\" thuộc gói BUSINESS dành cho quản trị doanh nghiệp và tổ chức.",
+                        fontSize = 13.sp,
+                        color = Color(0xFF475569),
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        color = Color(0xFFF5F3FF),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFDDD6FE)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "🏢 Đăng ký kích hoạt ngay:",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = Color(0xFF6D28D9)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Tính năng này sẽ được tính phí khi phát hành chính thức. Tạm thời bạn có thể bấm \"Đăng ký sử dụng\" để mở khóa và trải nghiệm ngay!",
+                                fontSize = 12.sp,
+                                color = Color(0xFF5B21B6)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val target = showBusinessUpgradeDialog
+                        showBusinessUpgradeDialog = null
+                        if (target?.contains("nhân sự") == true) {
+                            onNavigateToEmployees()
+                        } else {
+                            onNavigateToReports()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Đăng ký sử dụng", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        showBusinessUpgradeDialog = null
+                        onNavigateToUpgrade()
+                    }) {
+                        Text("Xem gói", color = ProfessionalPrimary)
+                    }
+                    TextButton(onClick = { showBusinessUpgradeDialog = null }) {
+                        Text("Đóng", color = Color(0xFF64748B))
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -6444,7 +6651,7 @@ fun BackupAndSyncScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sao lưu & Đồng bộ", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                title = { Text("Sao lưu và đồng bộ", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -6709,18 +6916,23 @@ fun BackupAndSyncScreen(
     }
 }
 
-// 6. VIP Upgrade Screen (#nang_cap_tai_khoan.png)
+// 6. VIP & Business Upgrade Screen (Gói cước VIP cá nhân & Business doanh nghiệp)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VipUpgradeScreen(
     onBack: () -> Unit
 ) {
-    var selectedPlan by remember { mutableStateOf(1) } // 0: Month, 1: Year
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var selectedTierTab by remember { mutableStateOf(0) } // 0: Gói VIP Cá nhân, 1: Gói BUSINESS Doanh nghiệp
+    var selectedPlan by remember { mutableStateOf(1) } // 0: Tháng, 1: Năm
+    var showTrialSuccessDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nâng cấp VIP", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                title = { Text("Nâng cấp dịch vụ", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -6729,6 +6941,7 @@ fun VipUpgradeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFFF5F7FB)
     ) { padding ->
         Column(
@@ -6738,50 +6951,130 @@ fun VipUpgradeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // VIP Enterprise Hero Banner
-            Box(
+            // Tier Selector Tab: VIP Cá nhân vs BUSINESS Doanh nghiệp
+            TabRow(
+                selectedTabIndex = selectedTierTab,
+                containerColor = Color.White,
+                contentColor = ProfessionalPrimary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6))
-                        )
-                    )
-                    .padding(24.dp)
+                    .clip(RoundedCornerShape(12.dp))
             ) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = Color(0xFFFDE047),
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                Tab(
+                    selected = selectedTierTab == 0,
+                    onClick = { selectedTierTab = 0 },
+                    text = {
                         Text(
-                            text = "VIP Enterprise",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            text = "⭐ Gói VIP (Cá nhân)",
+                            fontWeight = if (selectedTierTab == 0) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTierTab == 0) Color(0xFFD97706) else Color(0xFF64748B),
+                            fontSize = 13.sp
                         )
                     }
+                )
+                Tab(
+                    selected = selectedTierTab == 1,
+                    onClick = { selectedTierTab = 1 },
+                    text = {
+                        Text(
+                            text = "🏢 Gói BUSINESS",
+                            fontWeight = if (selectedTierTab == 1) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTierTab == 1) Color(0xFF7C3AED) else Color(0xFF64748B),
+                            fontSize = 13.sp
+                        )
+                    }
+                )
+            }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "Mở khóa toàn bộ tính năng CRM cao cấp, báo cáo chuyên sâu và hỗ trợ ưu tiên 24/7.",
-                        fontSize = 13.sp,
-                        color = Color(0xFFDBEAFE),
-                        lineHeight = 18.sp
-                    )
+            // Hero Banner for Selected Tier
+            if (selectedTierTab == 0) {
+                // VIP Individual Banner
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFFD97706), Color(0xFFF59E0B), Color(0xFFFBBF24))
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Gói VIP Chuyên Nghiệp (Cá nhân)",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Dành riêng cho chuyên viên kinh doanh xuất sắc, mở khóa phân hạng khách hàng VIP, không giới hạn danh bạ & chăm sóc thông minh.",
+                            fontSize = 13.sp,
+                            color = Color(0xFFFFFBEB),
+                            lineHeight = 18.sp
+                        )
+                    }
+                }
+            } else {
+                // BUSINESS Enterprise Banner
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF4C1D95), Color(0xFF6D28D9), Color(0xFF8B5CF6))
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Apartment,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Gói BUSINESS Doanh Nghiệp",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Giải pháp toàn diện cho Doanh nghiệp: Quản lý phòng ban & nhân sự, chấm công tính lương, phân quyền và báo cáo thống kê chuyên sâu.",
+                            fontSize = 13.sp,
+                            color = Color(0xFFF5F3FF),
+                            lineHeight = 18.sp
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "ĐẶC QUYỀN VIP",
+                text = if (selectedTierTab == 0) "ĐẶC QUYỀN GÓI VIP CÁ NHÂN" else "ĐẶC QUYỀN GÓI BUSINESS DOANH NGHIỆP",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF64748B),
@@ -6797,28 +7090,52 @@ fun VipUpgradeScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    VipPerkItem(
-                        icon = Icons.Default.TrendingUp,
-                        title = "Báo cáo chuyên sâu",
-                        desc = "Phân tích tự động doanh thu & tỷ lệ chuyển đổi"
-                    )
-                    VipPerkItem(
-                        icon = Icons.Default.Person,
-                        title = "Không giới hạn liên hệ",
-                        desc = "Lưu trữ không giới hạn khách hàng & giao dịch"
-                    )
-                    VipPerkItem(
-                        icon = Icons.Default.HeadsetMic,
-                        title = "Hỗ trợ 24/7 Priority",
-                        desc = "Đội ngũ chuyên viên tư vấn riêng xử lý ngay lập tức"
-                    )
+                    if (selectedTierTab == 0) {
+                        VipPerkItem(
+                            icon = Icons.Default.Star,
+                            title = "Phân loại khách hàng VIP",
+                            desc = "Tùy chỉnh nhóm, phân hạng khách hàng tiềm năng & thẻ VIP",
+                            tintColor = Color(0xFFD97706),
+                            bgColor = Color(0xFFFEF3C7)
+                        )
+                        VipPerkItem(
+                            icon = Icons.Default.Person,
+                            title = "Không giới hạn khách hàng",
+                            desc = "Lưu trữ không giới hạn thông tin khách hàng, thẻ liên hệ & giao dịch"
+                        )
+                        VipPerkItem(
+                            icon = Icons.Default.TrendingUp,
+                            title = "Hiệu suất & KPIs cá nhân",
+                            desc = "Theo dõi mục tiêu tháng, tiến độ hoàn thành chỉ tiêu theo thời gian thực"
+                        )
+                    } else {
+                        VipPerkItem(
+                            icon = Icons.Default.SupervisorAccount,
+                            title = "Quản lý nhân sự toàn diện",
+                            desc = "Quản lý nhân viên, phòng ban, chấm công, bảng lương & tính thâm niên tự động",
+                            tintColor = Color(0xFF7C3AED),
+                            bgColor = Color(0xFFEDE9FE)
+                        )
+                        VipPerkItem(
+                            icon = Icons.Default.TrendingUp,
+                            title = "Báo cáo thống kê chuyên sâu",
+                            desc = "Phân tích doanh thu, tỷ lệ chốt deal, hiệu suất phòng ban & biểu đồ tăng trưởng",
+                            tintColor = Color(0xFF7C3AED),
+                            bgColor = Color(0xFFEDE9FE)
+                        )
+                        VipPerkItem(
+                            icon = Icons.Default.HeadsetMic,
+                            title = "Hỗ trợ 24/7 Priority",
+                            desc = "Đội ngũ chuyên viên tư vấn riêng xử lý ngay lập tức và hướng dẫn triển khai"
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "GÓI DỊCH VỤ",
+                text = "BẢNG GIÁ DỊCH VỤ",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF64748B),
@@ -6832,67 +7149,194 @@ fun VipUpgradeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Month Plan
-                PlanCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Gói Tháng",
-                    price = "499k",
-                    period = "/tháng",
-                    subtitle = "Thanh toán linh hoạt",
-                    isSelected = selectedPlan == 0,
-                    onClick = { selectedPlan = 0 }
-                )
+                if (selectedTierTab == 0) {
+                    // Month Plan VIP
+                    PlanCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Gói Tháng (VIP)",
+                        price = "199.000đ",
+                        period = "/tháng",
+                        subtitle = "Thanh toán theo tháng",
+                        isSelected = selectedPlan == 0,
+                        onClick = { selectedPlan = 0 }
+                    )
 
-                // Year Plan
-                PlanCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Gói Năm",
-                    price = "4.990k",
-                    period = "/năm",
-                    subtitle = "Tiết kiệm 20%",
-                    badge = "TIẾT KIỆM 20%",
-                    isSelected = selectedPlan == 1,
-                    onClick = { selectedPlan = 1 }
-                )
+                    // Year Plan VIP
+                    PlanCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Gói Năm (VIP)",
+                        price = "1.890.000đ",
+                        period = "/năm",
+                        subtitle = "Tiết kiệm 20%",
+                        badge = "TIẾT KIỆM 20%",
+                        isSelected = selectedPlan == 1,
+                        onClick = { selectedPlan = 1 }
+                    )
+                } else {
+                    // Month Plan BUSINESS
+                    PlanCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Gói Tháng (BUSINESS)",
+                        price = "499.000đ",
+                        period = "/tháng",
+                        subtitle = "Tối đa 50 nhân viên",
+                        isSelected = selectedPlan == 0,
+                        onClick = { selectedPlan = 0 }
+                    )
+
+                    // Year Plan BUSINESS
+                    PlanCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Gói Năm (BUSINESS)",
+                        price = "4.790.000đ",
+                        period = "/năm",
+                        subtitle = "Tiết kiệm 20%",
+                        badge = "TIẾT KIỆM 20%",
+                        isSelected = selectedPlan == 1,
+                        onClick = { selectedPlan = 1 }
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Notice about trial and upcoming payment gateway
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFEFF6FF),
+                border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Color(0xFF1D4ED8),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Chương trình Trải nghiệm Miễn phí",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = Color(0xFF1E40AF)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Hiện tại ứng dụng đang trong giai đoạn phát hành thử nghiệm. Bạn có thể bấm Đăng ký sử dụng ngay hoàn toàn miễn phí. Cổng thanh toán chính thức sẽ được bổ sung trong bản cập nhật kế tiếp.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF1E3A8A),
+                            lineHeight = 17.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = onBack,
+                onClick = {
+                    showTrialSuccessDialog = true
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedTierTab == 0) Color(0xFFD97706) else Color(0xFF7C3AED)
+                )
             ) {
+                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "TIẾN HÀNH THANH TOÁN",
-                    fontSize = 15.sp,
+                    text = if (selectedTierTab == 0) "ĐĂNG KÝ SỬ DỤNG GÓI VIP (MIỄN PHÍ)" else "ĐĂNG KÝ SỬ DỤNG GÓI BUSINESS (MIỄN PHÍ)",
+                    fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             }
+
+            Spacer(modifier = Modifier.height(30.dp))
         }
+    }
+
+    if (showTrialSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showTrialSuccessDialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFECFDF5)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF059669),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Đăng ký thành công!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F172A)
+                )
+            },
+            text = {
+                Text(
+                    text = "Tài khoản của bạn đã được kích hoạt quyền sử dụng ${if (selectedTierTab == 0) "Gói VIP Cá nhân" else "Gói BUSINESS Doanh nghiệp"}. Bạn có thể trải nghiệm toàn bộ tính năng cao cấp ngay từ bây giờ!",
+                    fontSize = 13.sp,
+                    color = Color(0xFF475569),
+                    lineHeight = 18.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showTrialSuccessDialog = false
+                        onBack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary)
+                ) {
+                    Text("Bắt đầu sử dụng")
+                }
+            }
+        )
     }
 }
 
 @Composable
-fun VipPerkItem(icon: ImageVector, title: String, desc: String) {
+fun VipPerkItem(
+    icon: ImageVector,
+    title: String,
+    desc: String,
+    tintColor: Color = Color(0xFF7C3AED),
+    bgColor: Color = Color(0xFFEDE9FE)
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(38.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFEDE9FE)),
+                .background(bgColor),
             contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF7C3AED), modifier = Modifier.size(18.dp))
+            Icon(imageVector = icon, contentDescription = null, tint = tintColor, modifier = Modifier.size(20.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
             Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF0F172A))
-            Text(desc, fontSize = 12.sp, color = Color(0xFF64748B))
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(desc, fontSize = 12.sp, color = Color(0xFF64748B), lineHeight = 16.sp)
         }
     }
 }
