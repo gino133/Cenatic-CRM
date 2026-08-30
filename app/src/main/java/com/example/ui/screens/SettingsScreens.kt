@@ -389,41 +389,11 @@ fun SettingsHubScreen(
                 SettingsRowItem(
                     icon = Icons.Default.SupervisorAccount,
                     title = "Quản lý nhân viên",
-                    subtitle = "Phân quyền, theo dõi nhóm & cập nhật trạng thái",
+                    subtitle = "Nhân sự, chấm công, bảng lương & thâm niên",
                     badge = "VIP",
                     badgeBg = Color(0xFFFEF3C7),
                     badgeColor = Color(0xFFD97706),
                     onClick = onNavigateToEmployees
-                )
-                HorizontalDivider(color = Color(0xFFF1F5F9))
-                SettingsRowItem(
-                    icon = Icons.Default.AccessTime,
-                    title = "Chấm công & Điểm danh",
-                    subtitle = "Chuẩn 8h/ngày, 26 ngày/tháng, Tăng ca OT",
-                    badge = "NEW",
-                    badgeBg = Color(0xFFDEF7EC),
-                    badgeColor = Color(0xFF047857),
-                    onClick = onNavigateToTimekeeping
-                )
-                HorizontalDivider(color = Color(0xFFF1F5F9))
-                SettingsRowItem(
-                    icon = Icons.Default.Payments,
-                    title = "Bảng lương & Thâm niên",
-                    subtitle = "Tự động tính thâm niên, ngày nghỉ, thưởng 5 năm & KPI",
-                    badge = "NEW",
-                    badgeBg = Color(0xFFEFF6FF),
-                    badgeColor = Color(0xFF1D4ED8),
-                    onClick = onNavigateToPayroll
-                )
-                HorizontalDivider(color = Color(0xFFF1F5F9))
-                SettingsRowItem(
-                    icon = Icons.Default.WorkspacePremium,
-                    title = "Cài đặt quy chế thâm niên",
-                    subtitle = "Tùy chỉnh mốc năm, mức thưởng và số ngày phép tích lũy",
-                    badge = "MỚI",
-                    badgeBg = Color(0xFFFEF3C7),
-                    badgeColor = Color(0xFFD97706),
-                    onClick = onNavigateToSenioritySettings
                 )
                 HorizontalDivider(color = Color(0xFFF1F5F9))
                 SettingsRowItem(
@@ -1694,6 +1664,18 @@ fun EmployeeManagementScreen(
     }
 }
 
+// Helper to get nice theme color for department tag
+fun getDepartmentTheme(dept: String): Pair<Color, Color> {
+    return when {
+        dept.contains("Kinh doanh", ignoreCase = true) || dept.contains("Sales", ignoreCase = true) -> Pair(Color(0xFFEFF6FF), Color(0xFF1D4ED8))
+        dept.contains("Kỹ thuật", ignoreCase = true) || dept.contains("IT", ignoreCase = true) || dept.contains("Dev", ignoreCase = true) -> Pair(Color(0xFFEEF2FF), Color(0xFF4338CA))
+        dept.contains("Kế toán", ignoreCase = true) || dept.contains("Tài chính", ignoreCase = true) -> Pair(Color(0xFFECFDF5), Color(0xFF047857))
+        dept.contains("Marketing", ignoreCase = true) -> Pair(Color(0xFFFFF7ED), Color(0xFFC2410C))
+        dept.contains("Nhân sự", ignoreCase = true) || dept.contains("HR", ignoreCase = true) -> Pair(Color(0xFFFAF5FF), Color(0xFF7E22CE))
+        else -> Pair(Color(0xFFF1F5F9), Color(0xFF334155))
+    }
+}
+
 @Composable
 fun EmployeeDetailedCardItem(
     emp: EmployeeItem,
@@ -1716,17 +1698,19 @@ fun EmployeeDetailedCardItem(
         else -> Pair(Color(0xFFEFF6FF), Color(0xFF2563EB))
     }
 
+    val (deptBg, deptColor) = getDepartmentTheme(emp.department)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Header Row: Avatar, Name, Role, Status Badge & Menu
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header Row: Avatar, Name, Role & Top Right Actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
@@ -1754,27 +1738,23 @@ fun EmployeeDetailedCardItem(
                         Text(
                             text = emp.name,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
+                            fontSize = 16.sp,
                             color = Color(0xFF0F172A)
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = emp.role,
-                                fontSize = 12.sp,
-                                color = Color(0xFF64748B)
-                            )
-                            Text(" • ", fontSize = 12.sp, color = Color(0xFFCBD5E1))
-                            Text(
-                                text = emp.department,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = ProfessionalPrimary
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = emp.role,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF475569)
+                        )
                     }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
                     // Status Badge with dropdown switcher
                     Box {
                         Surface(
@@ -1853,10 +1833,63 @@ fun EmployeeDetailedCardItem(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = Color(0xFFF1F5F9))
-            Spacer(modifier = Modifier.height(8.dp))
 
-            // Seniority & Policy Row
+            // Dedicated Department Tag & Contact Info
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Department Badge Chip
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = deptBg,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, deptColor.copy(alpha = 0.25f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Apartment,
+                            contentDescription = null,
+                            tint = deptColor,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = emp.department,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = deptColor
+                        )
+                    }
+                }
+
+                if (emp.phone.isNotBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = null,
+                            tint = Color(0xFF94A3B8),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = emp.phone,
+                            fontSize = 11.sp,
+                            color = Color(0xFF64748B),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = Color(0xFFF1F5F9))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Seniority & Leave Days Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1864,7 +1897,7 @@ fun EmployeeDetailedCardItem(
             ) {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFF475569), modifier = Modifier.size(14.dp))
+                        Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Thâm niên: ${seniority.years} năm ${seniority.months} tháng",
@@ -1873,6 +1906,7 @@ fun EmployeeDetailedCardItem(
                             color = Color(0xFF1E293B)
                         )
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "Vào làm: ${emp.startDate}",
                         fontSize = 11.sp,
@@ -1882,8 +1916,8 @@ fun EmployeeDetailedCardItem(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFF8FAFC),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    color = Color(0xFFEFF6FF),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -1901,32 +1935,35 @@ fun EmployeeDetailedCardItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Bonuses & Salary Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFFF8FAFC))
-                    .padding(8.dp),
+                    .padding(10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Lương cơ bản", fontSize = 10.sp, color = Color(0xFF64748B))
-                    Text(String.format("%,d đ", emp.baseSalary.toLong()), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                    Text("Lương cơ bản", fontSize = 10.sp, color = Color(0xFF64748B), fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(String.format(java.util.Locale.US, "%,d đ", emp.baseSalary.toLong()), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                 }
 
                 if (seniority.bonusAmount > 0) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Thưởng thâm niên", fontSize = 10.sp, color = Color(0xFFD97706))
-                        Text(String.format("+%,d đ", seniority.bonusAmount.toLong()), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                        Text("Thưởng thâm niên", fontSize = 10.sp, color = Color(0xFFD97706), fontWeight = FontWeight.Medium)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(String.format(java.util.Locale.US, "+%,d đ", seniority.bonusAmount.toLong()), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
                     }
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Thưởng KPI", fontSize = 10.sp, color = Color(0xFF059669))
-                    Text(String.format("+%,d đ", emp.kpiBonus.toLong()), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                    Text("Thưởng KPI", fontSize = 10.sp, color = Color(0xFF059669), fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(String.format(java.util.Locale.US, "+%,d đ", emp.kpiBonus.toLong()), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
                 }
             }
         }
@@ -2366,6 +2403,7 @@ fun TimekeepingScreen(
                     AttendanceEmployeeCard(
                         employee = emp,
                         record = existingRecord,
+                        selectedDate = selectedDate,
                         policy = payrollPolicy,
                         onSaveAttendance = { type, otHours, otRate, note ->
                             viewModel.recordAttendance(
@@ -2422,17 +2460,77 @@ fun TimekeepingScreen(
     }
 }
 
+// Helper to auto-calculate overtime rate type without needing user manual selection or displaying coefficient
+fun determineAutoOvertimeRate(dateStr: String, attendanceType: AttendanceType): OvertimeRateType {
+    if (attendanceType == AttendanceType.HOLIDAY_LEAVE) {
+        return OvertimeRateType.HOLIDAY
+    }
+    return try {
+        val parts = dateStr.split("/", "-")
+        val (d, m, y) = if (parts.size >= 3) {
+            if (parts[0].length == 4) {
+                Triple(parts[2].toInt(), parts[1].toInt() - 1, parts[0].toInt())
+            } else {
+                Triple(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt())
+            }
+        } else {
+            Triple(1, 0, 2026)
+        }
+        val cal = Calendar.getInstance()
+        cal.set(y, m, d)
+        val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+        if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
+            OvertimeRateType.WEEKEND
+        } else {
+            OvertimeRateType.WEEKDAY
+        }
+    } catch (_: Exception) {
+        OvertimeRateType.WEEKDAY
+    }
+}
+
 @Composable
 fun AttendanceEmployeeCard(
     employee: EmployeeItem,
     record: AttendanceRecord?,
+    selectedDate: String = "27/08/2026",
     policy: PayrollPolicySettings,
     onSaveAttendance: (AttendanceType, Float, OvertimeRateType, String) -> Unit
 ) {
     var selectedType by remember(record) { mutableStateOf(record?.type ?: AttendanceType.FULL_WORK) }
     var overtimeHours by remember(record) { mutableStateOf(record?.overtimeHours ?: 0.0f) }
-    var overtimeRate by remember(record) { mutableStateOf(record?.overtimeRateType ?: OvertimeRateType.WEEKDAY) }
-    var isExpanded by remember { mutableStateOf(false) }
+
+    // Custom hours and minutes for non-standard OT durations
+    var customHoursStr by remember(record) {
+        val ot = record?.overtimeHours ?: 0.0f
+        if (ot > 0f && ot != 1.0f && ot != 2.0f && ot != 3.0f) {
+            val totalMins = (ot * 60).toInt()
+            val h = totalMins / 60
+            mutableStateOf(if (h > 0) h.toString() else "0")
+        } else {
+            mutableStateOf("")
+        }
+    }
+
+    var customMinutesStr by remember(record) {
+        val ot = record?.overtimeHours ?: 0.0f
+        if (ot > 0f && ot != 1.0f && ot != 2.0f && ot != 3.0f) {
+            val totalMins = (ot * 60).toInt()
+            val m = totalMins % 60
+            mutableStateOf(if (m > 0) m.toString() else "")
+        } else {
+            mutableStateOf("")
+        }
+    }
+
+    // Standard attendance types without OT in the scroll bar
+    val standardAttendanceTypes = listOf(
+        AttendanceType.FULL_WORK,
+        AttendanceType.HALF_LEAVE,
+        AttendanceType.FULL_LEAVE,
+        AttendanceType.UNPAID_LEAVE,
+        AttendanceType.HOLIDAY_LEAVE
+    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2441,6 +2539,7 @@ fun AttendanceEmployeeCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // Header: Avatar, Name, Department & Current Status Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -2468,8 +2567,20 @@ fun AttendanceEmployeeCard(
                     shape = RoundedCornerShape(8.dp),
                     color = if (record != null) Color(0xFFECFDF5) else Color(0xFFFEF3C7)
                 ) {
+                    val statusText = if (record != null) {
+                        if (record.overtimeHours > 0f) {
+                            val totalMins = (record.overtimeHours * 60).toInt()
+                            val h = totalMins / 60
+                            val m = totalMins % 60
+                            val otStr = if (m == 0) "${h}h" else "${h}h${m}p"
+                            "✓ ${record.type.shortCode} (+${otStr} OT)"
+                        } else {
+                            "✓ ${record.type.label}"
+                        }
+                    } else "Chưa chấm"
+
                     Text(
-                        text = if (record != null) "✓ ${record.type.label}" else "Chưa chấm",
+                        text = statusText,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (record != null) Color(0xFF047857) else Color(0xFFD97706),
@@ -2480,14 +2591,14 @@ fun AttendanceEmployeeCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Attendance Type Selector Chips
+            // 1. Attendance Type Selector Chips (OT is separated and NOT included here)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                AttendanceType.entries.forEach { type ->
+                standardAttendanceTypes.forEach { type ->
                     val isSelected = selectedType == type
                     Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -2495,7 +2606,8 @@ fun AttendanceEmployeeCard(
                         border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) ProfessionalPrimary else Color(0xFFE2E8F0)),
                         modifier = Modifier.clickable {
                             selectedType = type
-                            onSaveAttendance(type, overtimeHours, overtimeRate, "")
+                            val autoRate = determineAutoOvertimeRate(selectedDate, type)
+                            onSaveAttendance(type, overtimeHours, autoRate, "")
                         }
                     ) {
                         Text(
@@ -2511,68 +2623,201 @@ fun AttendanceEmployeeCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Overtime & Save Section
-            Row(
+            // 2. Dedicated Overtime (OT) Section - Tách riêng biệt, tự động thêm vào bảng công & tự động tính hệ số
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFFF8FAFC))
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                    .padding(10.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AccessTime, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Tăng ca (OT):", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF334155))
-                    Spacer(modifier = Modifier.width(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = null,
+                            tint = Color(0xFFD97706),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Tăng ca (OT):",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E293B)
+                        )
+                    }
 
-                    // OT Quick Selector
-                    listOf(0.0f, 1.0f, 1.5f, 2.0f, 3.0f).forEach { hours ->
-                        val isSelected = overtimeHours == hours
+                    if (overtimeHours > 0f) {
+                        val totalM = (overtimeHours * 60).toInt()
+                        val h = totalM / 60
+                        val m = totalM % 60
+                        val otDisplay = if (m == 0) "${h}h" else "${h}h ${m}p"
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isSelected) Color(0xFFD97706) else Color.White,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) Color(0xFFD97706) else Color(0xFFCBD5E1)),
-                            modifier = Modifier
-                                .padding(horizontal = 2.dp)
-                                .clickable {
-                                    overtimeHours = hours
-                                    onSaveAttendance(selectedType, hours, overtimeRate, "")
-                                }
+                            color = Color(0xFFFEF3C7)
                         ) {
                             Text(
-                                text = if (hours == 0.0f) "0h" else "${hours}h",
+                                text = "Đã ghi nhận: $otDisplay",
                                 fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) Color.White else Color(0xFF475569),
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFB45309),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     }
                 }
 
-                // OT Multiplier Selector (if hours > 0)
-                if (overtimeHours > 0) {
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = Color(0xFFFEF3C7),
-                        modifier = Modifier.clickable {
-                            overtimeRate = when (overtimeRate) {
-                                OvertimeRateType.WEEKDAY -> OvertimeRateType.WEEKEND
-                                OvertimeRateType.WEEKEND -> OvertimeRateType.HOLIDAY
-                                OvertimeRateType.HOLIDAY -> OvertimeRateType.WEEKDAY
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Overtime Preset Options: 0 (Mặc định), 1h, 2h, 3h
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val presets = listOf(
+                        0.0f to "0 (Mặc định)",
+                        1.0f to "1h",
+                        2.0f to "2h",
+                        3.0f to "3h"
+                    )
+
+                    presets.forEach { (hours, label) ->
+                        val isPresetSelected = overtimeHours == hours && customHoursStr.isEmpty() && customMinutesStr.isEmpty()
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isPresetSelected) Color(0xFFD97706) else Color.White,
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isPresetSelected) Color(0xFFD97706) else Color(0xFFCBD5E1)
+                            ),
+                            modifier = Modifier
+                                .weight(if (hours == 0.0f) 1.3f else 1f)
+                                .clickable {
+                                    overtimeHours = hours
+                                    customHoursStr = ""
+                                    customMinutesStr = ""
+                                    val autoRate = determineAutoOvertimeRate(selectedDate, selectedType)
+                                    onSaveAttendance(selectedType, hours, autoRate, "")
+                                }
+                        ) {
+                            Box(
+                                modifier = Modifier.padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isPresetSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isPresetSelected) Color.White else Color(0xFF334155)
+                                )
                             }
-                            onSaveAttendance(selectedType, overtimeHours, overtimeRate, "")
                         }
-                    ) {
-                        Text(
-                            text = "Hệ số: x${overtimeRate.multiplier}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFB45309),
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Custom Hours & Minutes Input Row (Dành cho trường hợp tăng ca không khớp 1h, 2h hoặc 3h)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White)
+                        .border(
+                            1.dp,
+                            if (customHoursStr.isNotEmpty() || customMinutesStr.isNotEmpty()) Color(0xFFD97706) else Color(0xFFE2E8F0),
+                            RoundedCornerShape(8.dp)
                         )
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "Khác:",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF475569)
+                    )
+
+                    // Input Số giờ
+                    OutlinedTextField(
+                        value = customHoursStr,
+                        onValueChange = { input ->
+                            val clean = input.filter { it.isDigit() }.take(2)
+                            customHoursStr = clean
+                            val h = clean.toIntOrNull() ?: 0
+                            val m = customMinutesStr.toIntOrNull() ?: 0
+                            val total = h.toFloat() + (m.toFloat() / 60.0f)
+                            overtimeHours = total
+                            val autoRate = determineAutoOvertimeRate(selectedDate, selectedType)
+                            onSaveAttendance(selectedType, total, autoRate, "")
+                        },
+                        placeholder = { Text("0", fontSize = 11.sp, color = Color(0xFF94A3B8)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier
+                            .width(48.dp)
+                            .height(40.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = customFieldColors()
+                    )
+                    Text("giờ", fontSize = 11.sp, color = Color(0xFF334155), fontWeight = FontWeight.Medium)
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    // Input Số phút
+                    OutlinedTextField(
+                        value = customMinutesStr,
+                        onValueChange = { input ->
+                            val clean = input.filter { it.isDigit() }.take(2)
+                            val mVal = clean.toIntOrNull() ?: 0
+                            val validMins = if (mVal > 59) "59" else clean
+                            customMinutesStr = validMins
+                            val h = customHoursStr.toIntOrNull() ?: 0
+                            val m = validMins.toIntOrNull() ?: 0
+                            val total = h.toFloat() + (m.toFloat() / 60.0f)
+                            overtimeHours = total
+                            val autoRate = determineAutoOvertimeRate(selectedDate, selectedType)
+                            onSaveAttendance(selectedType, total, autoRate, "")
+                        },
+                        placeholder = { Text("0", fontSize = 11.sp, color = Color(0xFF94A3B8)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier
+                            .width(48.dp)
+                            .height(40.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = customFieldColors()
+                    )
+                    Text("phút", fontSize = 11.sp, color = Color(0xFF334155), fontWeight = FontWeight.Medium)
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    if (customHoursStr.isNotEmpty() || customMinutesStr.isNotEmpty()) {
+                        val h = customHoursStr.toIntOrNull() ?: 0
+                        val m = customMinutesStr.toIntOrNull() ?: 0
+                        val total = h.toFloat() + (m.toFloat() / 60.0f)
+                        if (total > 0f) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Color(0xFFFEF3C7)
+                            ) {
+                                Text(
+                                    text = "=${String.format(java.util.Locale.US, "%.2f", total)}h",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFB45309),
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

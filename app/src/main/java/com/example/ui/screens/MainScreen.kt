@@ -160,8 +160,21 @@ fun MainScreen(viewModel: CrmViewModel) {
 
     // Handle system back button for full screen modes
     BackHandler(enabled = fullScreenMode != FullScreenMode.NONE) {
-        customerToEdit = null
-        fullScreenMode = FullScreenMode.NONE
+        when (fullScreenMode) {
+            FullScreenMode.TIMEKEEPING,
+            FullScreenMode.PAYROLL,
+            FullScreenMode.SENIORITY_SETTINGS -> {
+                fullScreenMode = FullScreenMode.EMPLOYEES
+            }
+            FullScreenMode.CREATE_QUOTE -> {
+                quoteToEdit = null
+                fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
+            }
+            else -> {
+                customerToEdit = null
+                fullScreenMode = FullScreenMode.NONE
+            }
+        }
     }
 
     // Handle system back button for selected customer
@@ -300,7 +313,7 @@ fun MainScreen(viewModel: CrmViewModel) {
         FullScreenMode.TIMEKEEPING -> {
             TimekeepingScreen(
                 viewModel = viewModel,
-                onBack = { fullScreenMode = FullScreenMode.NONE },
+                onBack = { fullScreenMode = FullScreenMode.EMPLOYEES },
                 onNavigateToPayroll = { fullScreenMode = FullScreenMode.PAYROLL }
             )
             return
@@ -308,7 +321,7 @@ fun MainScreen(viewModel: CrmViewModel) {
         FullScreenMode.PAYROLL -> {
             PayrollAndSeniorityScreen(
                 viewModel = viewModel,
-                onBack = { fullScreenMode = FullScreenMode.NONE },
+                onBack = { fullScreenMode = FullScreenMode.EMPLOYEES },
                 onNavigateToTimekeeping = { fullScreenMode = FullScreenMode.TIMEKEEPING },
                 onNavigateToSenioritySettings = { fullScreenMode = FullScreenMode.SENIORITY_SETTINGS }
             )
@@ -317,7 +330,7 @@ fun MainScreen(viewModel: CrmViewModel) {
         FullScreenMode.SENIORITY_SETTINGS -> {
             SeniorityPolicySettingsScreen(
                 viewModel = viewModel,
-                onBack = { fullScreenMode = FullScreenMode.NONE }
+                onBack = { fullScreenMode = FullScreenMode.EMPLOYEES }
             )
             return
         }
