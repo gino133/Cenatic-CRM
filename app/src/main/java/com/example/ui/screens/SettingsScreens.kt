@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.ui.components.AppDatePickerDialog
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -76,6 +77,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -129,6 +131,55 @@ import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material.icons.filled.ManageAccounts
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FormatPaint
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.LaptopMac
+import androidx.compose.material.icons.filled.Tablet
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.Nightlight
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.TableView
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LockReset
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.rememberCoroutineScope
@@ -171,10 +222,12 @@ fun UpgradeAccountScreen(
 enum class SettingsSubScreen {
     MAIN,
     PROFILE_EDIT,
+    ACCOUNT_SETTINGS,
     EMPLOYEES,
     CUSTOMER_TYPES,
     NOTIFICATIONS,
     SECURITY,
+    BACKUP_SYNC,
     VIP_UPGRADE
 }
 
@@ -182,6 +235,7 @@ enum class SettingsSubScreen {
 fun SettingsHubScreen(
     viewModel: CrmViewModel,
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToAccountSettings: () -> Unit = {},
     onNavigateToQuotes: () -> Unit = {},
     onNavigateToEmployees: () -> Unit,
     onNavigateToTimekeeping: () -> Unit,
@@ -190,6 +244,7 @@ fun SettingsHubScreen(
     onNavigateToCustomerTypes: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToSecurity: () -> Unit,
+    onNavigateToBackupSync: () -> Unit = {},
     onNavigateToUpgrade: () -> Unit,
     onNavigateToReports: () -> Unit,
     onNavigateToOverview: () -> Unit,
@@ -417,6 +472,16 @@ fun SettingsHubScreen(
         ) {
             Column {
                 SettingsRowItem(
+                    icon = Icons.Default.ManageAccounts,
+                    title = "Cài đặt tài khoản",
+                    subtitle = "Thông tin cá nhân, giao diện, ngôn ngữ & bảo mật",
+                    badge = "MỚI",
+                    badgeBg = Color(0xFFEFF6FF),
+                    badgeColor = Color(0xFF1D4ED8),
+                    onClick = onNavigateToAccountSettings
+                )
+                HorizontalDivider(color = Color(0xFFF1F5F9))
+                SettingsRowItem(
                     icon = Icons.Default.Notifications,
                     title = "Cài đặt thông báo",
                     subtitle = "Lịch hẹn, báo giá và nhiệm vụ mới",
@@ -428,6 +493,16 @@ fun SettingsHubScreen(
                     title = "Bảo mật tài khoản",
                     subtitle = "Đổi mật khẩu, 2FA, sinh trắc học",
                     onClick = onNavigateToSecurity
+                )
+                HorizontalDivider(color = Color(0xFFF1F5F9))
+                SettingsRowItem(
+                    icon = Icons.Default.CloudSync,
+                    title = "Sao lưu & Đồng bộ đám mây",
+                    subtitle = "Lưu trữ Google Drive, xuất dữ liệu Excel & phục hồi",
+                    badge = "CLOUD",
+                    badgeBg = Color(0xFFF0FDF4),
+                    badgeColor = Color(0xFF16A34A),
+                    onClick = onNavigateToBackupSync
                 )
             }
         }
@@ -490,6 +565,16 @@ fun SettingsMainHost(
             viewModel = viewModel,
             onBack = { currentSubScreen = SettingsSubScreen.MAIN }
         )
+        SettingsSubScreen.BACKUP_SYNC -> BackupAndSyncScreen(
+            viewModel = viewModel,
+            onBack = { currentSubScreen = SettingsSubScreen.MAIN }
+        )
+        SettingsSubScreen.ACCOUNT_SETTINGS -> AccountSettingsScreen(
+            viewModel = viewModel,
+            onNavigateToEditProfile = { currentSubScreen = SettingsSubScreen.PROFILE_EDIT },
+            onNavigateToSecurity = { currentSubScreen = SettingsSubScreen.SECURITY },
+            onBack = { currentSubScreen = SettingsSubScreen.MAIN }
+        )
         SettingsSubScreen.VIP_UPGRADE -> VipUpgradeScreen(
             onBack = { currentSubScreen = SettingsSubScreen.MAIN }
         )
@@ -501,10 +586,41 @@ fun SettingsMainHost(
 @Composable
 fun AccountSettingsScreen(
     viewModel: CrmViewModel,
-    onNavigate: (SettingsSubScreen) -> Unit,
-    onBack: () -> Unit
+    onNavigateToEditProfile: () -> Unit = {},
+    onNavigateToSecurity: () -> Unit = {},
+    onBack: () -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var selectedThemeMode by remember { mutableStateOf("light") }
+    var selectedAccentColorIndex by remember { mutableIntStateOf(0) }
+    var selectedLanguage by remember { mutableStateOf("vi") }
+    var selectedCurrency by remember { mutableStateOf("VND") }
+    var selectedDateFormat by remember { mutableStateOf("DD/MM/YYYY") }
+    var fontScale by remember { mutableStateOf("standard") }
+    var enableSmoothAnim by remember { mutableStateOf(true) }
+    var enableAutoSync by remember { mutableStateOf(true) }
+    var enableBiometrics by remember { mutableStateOf(true) }
+    var enable2FA by remember { mutableStateOf(false) }
+    var cacheSizeText by remember { mutableStateOf("14.8 MB") }
+    var isCleaningCache by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    val accentColors = listOf(
+        Pair("Xanh Biển", Color(0xFF1E40AF)),
+        Pair("Xanh Ngọc", Color(0xFF059669)),
+        Pair("Tím Royal", Color(0xFF7C3AED)),
+        Pair("Cam Sunset", Color(0xFFEA580C)),
+        Pair("Đỏ Ruby", Color(0xFFDC2626))
+    )
+
+    val languages = listOf(
+        Triple("vi", "Tiếng Việt", "🇻🇳 Mặc định (Việt Nam)"),
+        Triple("en", "English", "🇺🇸 United States (Tiếng Anh)")
+    )
 
     Scaffold(
         topBar = {
@@ -518,6 +634,7 @@ fun AccountSettingsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFFF5F7FB)
     ) { padding ->
         Column(
@@ -528,7 +645,8 @@ fun AccountSettingsScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Card Header
+            // ================= 1. THÔNG TIN CÁ NHÂN (ĐẦU TIÊN) =================
+            SettingsGroupHeader("THÔNG TIN CÁ NHÂN")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -538,97 +656,681 @@ fun AccountSettingsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(16.dp)
                 ) {
-                    Box(contentAlignment = Alignment.BottomEnd) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFE2E8F0)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (!userProfile.avatarUrl.isNullOrBlank()) {
-                                AsyncImage(
-                                    model = userProfile.avatarUrl,
-                                    contentDescription = "Avatar",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_user_avatar),
-                                    contentDescription = "Avatar",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(contentAlignment = Alignment.BottomEnd) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE2E8F0)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (!userProfile.avatarUrl.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = userProfile.avatarUrl,
+                                        contentDescription = "Avatar",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_user_avatar),
+                                        contentDescription = "Avatar",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(accentColors[selectedAccentColorIndex].second)
+                                    .clickable { onNavigateToEditProfile() },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = "Change photo",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(13.dp)
                                 )
                             }
                         }
-                        Box(
-                            modifier = Modifier
-                                .size(26.dp)
-                                .clip(CircleShape)
-                                .background(ProfessionalPrimary)
-                                .clickable { onNavigate(SettingsSubScreen.PROFILE_EDIT) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit photo",
-                                tint = Color.White,
-                                modifier = Modifier.size(14.dp)
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = userProfile.fullName,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                color = Color(0xFF0F172A)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFEFF6FF))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = userProfile.role.ifBlank { "Quản lý cấp cao" },
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF1D4ED8)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Gói Pro Enterprise • Thâm niên 3+ năm",
+                                fontSize = 11.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Detail list
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = null,
+                            tint = Color(0xFF64748B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Email:",
+                            fontSize = 13.sp,
+                            color = Color(0xFF64748B),
+                            modifier = Modifier.width(70.dp)
+                        )
+                        Text(
+                            text = userProfile.email.ifBlank { "admin@ankhangpharma.com" },
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF0F172A)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = null,
+                            tint = Color(0xFF64748B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Số điện thoại:",
+                            fontSize = 13.sp,
+                            color = Color(0xFF64748B),
+                            modifier = Modifier.width(70.dp)
+                        )
+                        Text(
+                            text = userProfile.phone.ifBlank { "0988 123 456" },
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF0F172A)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = Color(0xFF64748B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Ngày sinh:",
+                            fontSize = 13.sp,
+                            color = Color(0xFF64748B),
+                            modifier = Modifier.width(70.dp)
+                        )
+                        Text(
+                            text = if (userProfile.dob.isNotBlank()) userProfile.dob else "15/08/1990",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF0F172A)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = Color(0xFF64748B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Địa chỉ:",
+                            fontSize = 13.sp,
+                            color = Color(0xFF64748B),
+                            modifier = Modifier.width(70.dp)
+                        )
+                        Text(
+                            text = if (userProfile.address.isNotBlank()) userProfile.address else "Hà Nội, Việt Nam",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF0F172A),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = onNavigateToEditProfile,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = accentColors[selectedAccentColorIndex].second
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Cập nhật thông tin cá nhân", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 2. GIAO DIỆN (THEME & DISPLAY) =================
+            SettingsGroupHeader("GIAO DIỆN & HIỂN THỊ")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Theme Mode Selector
+                    Text(
+                        text = "Chế độ giao diện",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        listOf(
+                            Triple("light", "Sáng", Icons.Default.LightMode),
+                            Triple("dark", "Tối", Icons.Default.DarkMode),
+                            Triple("system", "Hệ thống", Icons.Default.BrightnessAuto)
+                        ).forEach { (modeKey, modeTitle, modeIcon) ->
+                            val isSelected = selectedThemeMode == modeKey
+                            Card(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        selectedThemeMode = modeKey
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Đã chuyển chế độ giao diện: $modeTitle")
+                                        }
+                                    },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) Color(0xFFEFF6FF) else Color(0xFFF8FAFC)
+                                ),
+                                border = BorderStroke(
+                                    width = if (isSelected) 1.5.dp else 1.dp,
+                                    color = if (isSelected) accentColors[selectedAccentColorIndex].second else Color(0xFFE2E8F0)
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = modeIcon,
+                                        contentDescription = modeTitle,
+                                        tint = if (isSelected) accentColors[selectedAccentColorIndex].second else Color(0xFF64748B),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = modeTitle,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) accentColors[selectedAccentColorIndex].second else Color(0xFF475569)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Accent Color
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Tông màu chủ đạo",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF0F172A)
+                            )
+                            Text(
+                                text = accentColors[selectedAccentColorIndex].first,
+                                fontSize = 12.sp,
+                                color = accentColors[selectedAccentColorIndex].second,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        accentColors.forEachIndexed { index, pair ->
+                            val isColorSelected = selectedAccentColorIndex == index
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isColorSelected) pair.second.copy(alpha = 0.2f) else Color.Transparent
+                                    )
+                                    .clickable {
+                                        selectedAccentColorIndex = index
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Đã đổi màu chủ đạo: ${pair.first}")
+                                        }
+                                    }
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(pair.second),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (isColorSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Font Size Density
+                    Text(
+                        text = "Cỡ chữ & Bố cục",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(
+                            Pair("compact", "Nhỏ (90%)"),
+                            Pair("standard", "Chuẩn (100%)"),
+                            Pair("large", "Lớn (115%)")
+                        ).forEach { (scaleKey, scaleTitle) ->
+                            val isScaleSelected = fontScale == scaleKey
+                            FilterChip(
+                                selected = isScaleSelected,
+                                onClick = { fontScale = scaleKey },
+                                label = {
+                                    Text(
+                                        text = scaleTitle,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isScaleSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(
-                        text = userProfile.fullName,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color(0xFF0F172A)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFE2E8F0))
-                            .padding(horizontal = 10.dp, vertical = 2.dp)
+                    // Smooth animation toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = userProfile.role,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF475569)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Hiệu ứng chuyển trang mượt mà",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF0F172A)
+                            )
+                            Text(
+                                text = "Tối ưu hóa hoạt ảnh trên màn hình 120Hz",
+                                fontSize = 11.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                        Switch(
+                            checked = enableSmoothAnim,
+                            onCheckedChange = { enableSmoothAnim = it }
                         )
                     }
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // ================= 3. NGÔN NGỮ (LANGUAGE & LOCALIZATION) =================
+            SettingsGroupHeader("NGÔN NGỮ & ĐỊNH DẠNG")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Thay đổi ảnh đại diện",
-                        fontSize = 12.sp,
-                        color = ProfessionalPrimary,
-                        fontWeight = FontWeight.Medium,
+                        text = "Ngôn ngữ ứng dụng",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    languages.forEachIndexed { index, (langCode, langName, langDetail) ->
+                        val isLangSelected = selectedLanguage == langCode
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isLangSelected) Color(0xFFF1F5F9) else Color.Transparent)
+                                .clickable {
+                                    selectedLanguage = langCode
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Đã chuyển ngôn ngữ sang: $langName")
+                                    }
+                                }
+                                .padding(horizontal = 10.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = langName,
+                                    fontSize = 14.sp,
+                                    fontWeight = if (isLangSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isLangSelected) accentColors[selectedAccentColorIndex].second else Color(0xFF0F172A)
+                                )
+                                Text(
+                                    text = langDetail,
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                            if (isLangSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Selected",
+                                    tint = accentColors[selectedAccentColorIndex].second,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        if (index < languages.size - 1) {
+                            HorizontalDivider(color = Color(0xFFF8FAFC))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Currency format
+                    Text(
+                        text = "Định dạng tiền tệ",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("VND (₫)", "USD ($)", "EUR (€)").forEach { curr ->
+                            val isCurrSelected = selectedCurrency in curr
+                            FilterChip(
+                                selected = isCurrSelected,
+                                onClick = {
+                                    selectedCurrency = if (curr.startsWith("VND")) "VND" else if (curr.startsWith("USD")) "USD" else "EUR"
+                                },
+                                label = { Text(curr, fontSize = 12.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Date format
+                    Text(
+                        text = "Định dạng ngày & giờ",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("DD/MM/YYYY", "YYYY-MM-DD").forEach { dFormat ->
+                            val isFormatSelected = selectedDateFormat == dFormat
+                            FilterChip(
+                                selected = isFormatSelected,
+                                onClick = { selectedDateFormat = dFormat },
+                                label = { Text(dFormat, fontSize = 12.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 4. BẢO MẬT & ĐĂNG NHẬP =================
+            SettingsGroupHeader("BẢO MẬT & ĐĂNG NHẬP")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column {
+                    SettingsRowItem(
+                        icon = Icons.Default.Lock,
+                        title = "Đổi mật khẩu tài khoản",
+                        subtitle = "Cập nhật mật khẩu định kỳ 90 ngày",
+                        onClick = onNavigateToSecurity
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // 2FA Switch row
+                    Row(
                         modifier = Modifier
-                            .clickable { onNavigate(SettingsSubScreen.PROFILE_EDIT) }
-                            .padding(4.dp)
-                    )
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFEFF6FF)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.VpnKey,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1D4ED8),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Xác thực 2 bước (2FA)",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF0F172A)
+                                )
+                                Text(
+                                    text = "Bảo vệ tài khoản qua mã OTP SMS/Email",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = enable2FA,
+                            onCheckedChange = {
+                                enable2FA = it
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        if (it) "Đã bật xác thực 2 bước 2FA" else "Đã tắt xác thực 2 bước"
+                                    )
+                                }
+                            }
+                        )
+                    }
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Biometrics switch row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFECFDF5)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Fingerprint,
+                                    contentDescription = null,
+                                    tint = Color(0xFF059669),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Mở khóa sinh trắc học",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF0F172A)
+                                )
+                                Text(
+                                    text = "Sử dụng vân tay hoặc nhận diện khuôn mặt",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = enableBiometrics,
+                            onCheckedChange = {
+                                enableBiometrics = it
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        if (it) "Đã bật đăng nhập bằng sinh trắc học" else "Đã tắt sinh trắc học"
+                                    )
+                                }
+                            }
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // GROUP: TÀI KHOẢN
-            SettingsGroupHeader("TÀI KHOẢN")
+            // ================= 5. DỮ LIỆU & BỘ NHỚ =================
+            SettingsGroupHeader("DỮ LIỆU & BỘ NHỚ")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -636,102 +1338,210 @@ fun AccountSettingsScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column {
-                    SettingsRowItem(
-                        icon = Icons.Default.Person,
-                        title = "Cập nhật thông tin cá nhân",
-                        onClick = { onNavigate(SettingsSubScreen.PROFILE_EDIT) }
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFF0FDF4)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CloudDone,
+                                    contentDescription = null,
+                                    tint = Color(0xFF16A34A),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Tự động đồng bộ đám mây",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF0F172A)
+                                )
+                                Text(
+                                    text = "Đồng bộ khách hàng và báo giá tức thì",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = enableAutoSync,
+                            onCheckedChange = { enableAutoSync = it }
+                        )
+                    }
                     HorizontalDivider(color = Color(0xFFF1F5F9))
-                    SettingsRowItem(
-                        icon = Icons.Default.SupervisorAccount,
-                        title = "Quản lý nhân viên",
-                        onClick = { onNavigate(SettingsSubScreen.EMPLOYEES) }
-                    )
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-                    SettingsRowItem(
-                        icon = Icons.Default.Star,
-                        title = "Phân loại khách hàng",
-                        onClick = { onNavigate(SettingsSubScreen.CUSTOMER_TYPES) }
-                    )
+
+                    // Clean cache row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFFEF3C7)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CleaningServices,
+                                    contentDescription = null,
+                                    tint = Color(0xFFD97706),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Dọn dẹp bộ nhớ đệm",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF0F172A)
+                                )
+                                Text(
+                                    text = "Dung lượng cache hiện tại: $cacheSizeText",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                if (cacheSizeText != "0 MB") {
+                                    isCleaningCache = true
+                                    scope.launch {
+                                        cacheSizeText = "0 MB"
+                                        isCleaningCache = false
+                                        snackbarHostState.showSnackbar("Đã dọn dẹp sạch 14.8 MB bộ nhớ tạm!")
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (cacheSizeText == "0 MB") Color(0xFFE2E8F0) else Color(0xFFFEF3C7),
+                                contentColor = if (cacheSizeText == "0 MB") Color(0xFF94A3B8) else Color(0xFFB45309)
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = if (cacheSizeText == "0 MB") "Đã dọn" else "Dọn dẹp",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // GROUP: DỊCH VỤ
-            SettingsGroupHeader("DỊCH VỤ")
+            // ================= 6. THÔNG TIN ỨNG DỤNG =================
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
-                SettingsRowItem(
-                    icon = Icons.Default.Star,
-                    title = "Nâng cấp tài khoản VIP",
-                    badge = "VIP",
-                    badgeColor = Color(0xFF7C3AED),
-                    badgeBg = Color(0xFFEDE9FE),
-                    onClick = { onNavigate(SettingsSubScreen.VIP_UPGRADE) }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // GROUP: HỆ THỐNG
-            SettingsGroupHeader("HỆ THỐNG")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column {
-                    SettingsRowItem(
-                        icon = Icons.Default.Notifications,
-                        title = "Cài đặt thông báo",
-                        onClick = { onNavigate(SettingsSubScreen.NOTIFICATIONS) }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "An Khang Pharma CRM Enterprise",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = Color(0xFF0F172A)
                     )
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-                    SettingsRowItem(
-                        icon = Icons.Default.Security,
-                        title = "Bảo mật",
-                        onClick = { onNavigate(SettingsSubScreen.SECURITY) }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Phiên bản v2.5.2 (Build 2026.08) • Bản quyền bảo lưu",
+                        fontSize = 11.sp,
+                        color = Color(0xFF94A3B8)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Logout Button
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
-                    .clickable { viewModel.logout() }
-                    .padding(vertical = 14.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            // ================= 7. ĐĂNG XUẤT =================
+            Button(
+                onClick = { showLogoutDialog = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFEE2E2),
+                    contentColor = Color(0xFFDC2626)
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = null,
-                    tint = Color(0xFFE02424),
-                    modifier = Modifier.size(20.dp)
+                    contentDescription = "Logout",
+                    modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Đăng xuất",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFE02424)
-                )
+                Text("Đăng xuất tài khoản", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Xác nhận đăng xuất", fontWeight = FontWeight.Bold) },
+            text = { Text("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản trên thiết bị này không?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) {
+                    Text("Đăng xuất", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun AccountSettingsScreen(
+    viewModel: CrmViewModel,
+    onNavigate: (SettingsSubScreen) -> Unit,
+    onBack: () -> Unit
+) {
+    AccountSettingsScreen(
+        viewModel = viewModel,
+        onNavigateToEditProfile = { onNavigate(SettingsSubScreen.PROFILE_EDIT) },
+        onNavigateToSecurity = { onNavigate(SettingsSubScreen.SECURITY) },
+        onBack = onBack,
+        onLogout = { viewModel.logout() }
+    )
 }
 
 // Country model for phone number picker
@@ -2194,21 +3004,33 @@ fun TimekeepingScreen(
 
     var selectedDate by remember { mutableStateOf("27/08/2026") }
     var selectedDepartment by remember { mutableStateOf("Tất cả") }
+    var searchQuery by remember { mutableStateOf("") }
     var showBatchConfirmDialog by remember { mutableStateOf(false) }
 
-    val departments = listOf("Tất cả", "Phòng Kinh doanh", "Phòng Kỹ thuật", "Phòng Kế toán", "Phòng Marketing")
+    val departments = remember(employees) {
+        listOf("Tất cả") + employees.map { it.department }.filter { it.isNotBlank() }.distinct()
+    }
 
-    val filteredEmployees = remember(employees, selectedDepartment) {
-        if (selectedDepartment == "Tất cả") employees
-        else employees.filter { it.department.equals(selectedDepartment, ignoreCase = true) }
+    val filteredEmployees = remember(employees, selectedDepartment, searchQuery) {
+        employees.filter { emp ->
+            val matchesDept = selectedDepartment == "Tất cả" || emp.department.equals(selectedDepartment, ignoreCase = true)
+            val matchesSearch = searchQuery.isBlank() ||
+                    emp.name.contains(searchQuery, ignoreCase = true) ||
+                    emp.department.contains(searchQuery, ignoreCase = true) ||
+                    emp.role.contains(searchQuery, ignoreCase = true) ||
+                    emp.phone.contains(searchQuery, ignoreCase = true)
+            matchesDept && matchesSearch
+        }
     }
 
     val todayRecords = remember(attendanceRecords, selectedDate) {
         attendanceRecords.filter { it.date == selectedDate }
     }
 
-    val checkedCount = todayRecords.size
-    val totalOtHours = todayRecords.sumOf { it.overtimeHours.toDouble() }
+    val checkedCount = todayRecords.count { tr -> filteredEmployees.any { it.id == tr.employeeId } }
+    val totalOtHours = todayRecords
+        .filter { tr -> filteredEmployees.any { it.id == tr.employeeId } }
+        .sumOf { it.overtimeHours.toDouble() }
 
     Scaffold(
         topBar = {
@@ -2347,6 +3169,29 @@ fun TimekeepingScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Search Bar for Timekeeping Screen
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Tìm nhân sự theo tên, chức vụ, phòng ban...", fontSize = 12.sp, color = Color(0xFF94A3B8)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Xóa", tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
+                        }
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = customFieldColors()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Quick Batch Check-in & Dept filters
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2361,6 +3206,7 @@ fun TimekeepingScreen(
                 ) {
                     departments.forEach { dept ->
                         val isSelected = selectedDepartment == dept
+                        val count = if (dept == "Tất cả") employees.size else employees.count { it.department.equals(dept, ignoreCase = true) }
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = if (isSelected) Color(0xFF0F172A) else Color.White,
@@ -2368,7 +3214,7 @@ fun TimekeepingScreen(
                             modifier = Modifier.clickable { selectedDepartment = dept }
                         ) {
                             Text(
-                                text = dept,
+                                text = "$dept ($count)",
                                 fontSize = 11.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSelected) Color.White else Color(0xFF475569),
@@ -2842,11 +3688,30 @@ fun PayrollAndSeniorityScreen(
 
     var showPolicySettingsDialog by remember { mutableStateOf(false) }
     var selectedMonth by remember { mutableStateOf("08/2026") }
+    var selectedDepartment by remember { mutableStateOf("Tất cả") }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val departments = remember(employees) {
+        listOf("Tất cả") + employees.map { it.department }.filter { it.isNotBlank() }.distinct()
+    }
 
     val payrollResults = remember(employees, attendanceRecords, payrollPolicy, selectedMonth) {
         employees.map { emp ->
             val empRecords = attendanceRecords.filter { it.employeeId == emp.id }
             calculateEmployeePayroll(emp, empRecords, payrollPolicy)
+        }
+    }
+
+    val filteredPayrollResults = remember(payrollResults, selectedDepartment, searchQuery) {
+        payrollResults.filter { res ->
+            val emp = res.employee
+            val matchesDept = selectedDepartment == "Tất cả" || emp.department.equals(selectedDepartment, ignoreCase = true)
+            val matchesSearch = searchQuery.isBlank() ||
+                    emp.name.contains(searchQuery, ignoreCase = true) ||
+                    emp.department.contains(searchQuery, ignoreCase = true) ||
+                    emp.role.contains(searchQuery, ignoreCase = true) ||
+                    emp.phone.contains(searchQuery, ignoreCase = true)
+            matchesDept && matchesSearch
         }
     }
 
@@ -2967,7 +3832,7 @@ fun PayrollAndSeniorityScreen(
                     ) {
                         Text("Tổng quỹ lương tháng:", fontSize = 12.sp, color = Color(0xFF1E40AF))
                         Text(
-                            String.format("%,d đ", totalCompanyPayroll.toLong()),
+                            String.format(java.util.Locale.US, "%,d đ", totalCompanyPayroll.toLong()),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E3A8A)
@@ -2978,19 +3843,71 @@ fun PayrollAndSeniorityScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("• Thưởng thâm niên: +${String.format("%,d đ", totalSeniorityBonus.toLong())}", fontSize = 11.sp, color = Color(0xFFD97706))
-                        Text("• Chi trả tăng ca: +${String.format("%,d đ", totalOtPayout.toLong())}", fontSize = 11.sp, color = Color(0xFF059669))
+                        Text("• Thưởng thâm niên: +${String.format(java.util.Locale.US, "%,d đ", totalSeniorityBonus.toLong())}", fontSize = 11.sp, color = Color(0xFFD97706))
+                        Text("• Chi trả tăng ca: +${String.format(java.util.Locale.US, "%,d đ", totalOtPayout.toLong())}", fontSize = 11.sp, color = Color(0xFF059669))
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Quick Search Bar for Payroll Screen
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Tìm nhân sự theo tên, chức vụ, phòng ban...", fontSize = 12.sp, color = Color(0xFF94A3B8)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Xóa", tint = Color(0xFF64748B), modifier = Modifier.size(18.dp))
+                        }
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = customFieldColors()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Department Filter Chips for Payroll Screen
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                departments.forEach { dept ->
+                    val isSelected = selectedDepartment == dept
+                    val count = if (dept == "Tất cả") payrollResults.size else payrollResults.count { it.employee.department.equals(dept, ignoreCase = true) }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isSelected) Color(0xFF0F172A) else Color.White,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0)),
+                        modifier = Modifier.clickable { selectedDepartment = dept }
+                    ) {
+                        Text(
+                            text = "$dept ($count)",
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else Color(0xFF475569),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Bảng chi tiết lương nhân viên (${payrollResults.size} người)",
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = Color(0xFF0F172A)
+                text = "Hiển thị ${filteredPayrollResults.size} / ${payrollResults.size} nhân viên",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                color = Color(0xFF64748B)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -2999,7 +3916,7 @@ fun PayrollAndSeniorityScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(items = payrollResults, key = { it.employee.id }) { result ->
+                items(items = filteredPayrollResults, key = { it.employee.id }) { result ->
                     EmployeePayrollCard(result = result, policy = payrollPolicy)
                 }
             }
@@ -3025,6 +3942,7 @@ fun EmployeePayrollCard(
 ) {
     val emp = result.employee
     val seniority = result.seniorityResult
+    val (deptBg, deptColor) = getDepartmentTheme(emp.department)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -3033,40 +3951,88 @@ fun EmployeePayrollCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            // Header
+            // Header: Avatar, Name, Department (Top) & Role (Bottom) + Thực nhận Pill
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFE2E8F0)),
+                            .background(deptBg),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(emp.initials, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF1E293B))
+                        Text(emp.initials, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = deptColor)
                     }
                     Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(emp.name, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF0F172A))
-                        Text("${emp.role} • ${emp.department}", fontSize = 11.sp, color = Color(0xFF64748B))
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
+                        Text(
+                            text = emp.name,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color(0xFF0F172A)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        // Dòng 1: Phòng ban ở trên
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Apartment,
+                                contentDescription = null,
+                                tint = deptColor,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = emp.department,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = deptColor
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        // Dòng 2: Chức vụ ở dưới
+                        Text(
+                            text = emp.role,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF64748B)
+                        )
                     }
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Khối THỰC NHẬN - Bố cục pill độc lập, rõ ràng, không bao giờ bị rớt dòng chữ
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Color(0xFFECFDF5)
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFFECFDF5),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA7F3D0))
                 ) {
-                    Text(
-                        text = "Thực nhận: ${String.format("%,d đ", result.totalSalary.toLong())}",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF047857),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = "THỰC NHẬN",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF059669),
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(1.dp))
+                        Text(
+                            text = String.format(java.util.Locale.US, "%,d đ", result.totalSalary.toLong()),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF047857)
+                        )
+                    }
                 }
             }
 
@@ -3077,20 +4043,49 @@ fun EmployeePayrollCard(
             // Seniority Info & Days Leave
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "⏳ Thâm niên: ${seniority.years} năm ${seniority.months} tháng (Vào: ${emp.startDate})",
-                    fontSize = 11.sp,
-                    color = Color(0xFF334155),
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "🏖️ Phép: ${seniority.totalLeaveDays} ngày (+${seniority.extraLeaveDays})",
-                    fontSize = 11.sp,
-                    color = Color(0xFF0284C7),
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Timer,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Thâm niên: ${seniority.years} năm ${seniority.months} tháng",
+                        fontSize = 11.sp,
+                        color = Color(0xFF334155),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFFEFF6FF),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBFDBFE))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.BeachAccess,
+                            contentDescription = null,
+                            tint = Color(0xFF1D4ED8),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "Phép: ${seniority.totalLeaveDays} ngày (+${seniority.extraLeaveDays})",
+                            fontSize = 10.sp,
+                            color = Color(0xFF1D4ED8),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -3106,34 +4101,34 @@ fun EmployeePayrollCard(
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("• Lương cơ bản tháng (${policy.standardWorkDays} ngày):", fontSize = 11.sp, color = Color(0xFF64748B))
-                    Text(String.format("%,d đ", emp.baseSalary.toLong()), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0F172A))
+                    Text(String.format(java.util.Locale.US, "%,d đ", emp.baseSalary.toLong()), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0F172A))
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("• Công thực tế (${result.actualWorkDays} / ${policy.standardWorkDays} ngày):", fontSize = 11.sp, color = Color(0xFF64748B))
-                    Text(String.format("%,d đ", result.actualWorkSalary.toLong()), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0F172A))
+                    Text(String.format(java.util.Locale.US, "%,d đ", result.actualWorkSalary.toLong()), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0F172A))
                 }
                 if (result.totalOvertimeHours > 0) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("• Tăng ca OT (${result.totalOvertimeHours} giờ):", fontSize = 11.sp, color = Color(0xFFD97706))
-                        Text(String.format("+%,d đ", result.overtimeSalary.toLong()), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                        Text(String.format(java.util.Locale.US, "+%,d đ", result.overtimeSalary.toLong()), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
                     }
                 }
                 if (seniority.bonusAmount > 0) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("• Thưởng thâm niên:", fontSize = 11.sp, color = Color(0xFFB45309))
-                        Text(String.format("+%,d đ", seniority.bonusAmount.toLong()), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                        Text(String.format(java.util.Locale.US, "+%,d đ", seniority.bonusAmount.toLong()), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
                     }
                 }
                 if (emp.kpiBonus > 0) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("• Thưởng KPI:", fontSize = 11.sp, color = Color(0xFF059669))
-                        Text(String.format("+%,d đ", emp.kpiBonus.toLong()), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                        Text(String.format(java.util.Locale.US, "+%,d đ", emp.kpiBonus.toLong()), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
                     }
                 }
                 if (emp.allowance > 0) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("• Phụ cấp:", fontSize = 11.sp, color = Color(0xFF64748B))
-                        Text(String.format("+%,d đ", emp.allowance.toLong()), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0F172A))
+                        Text(String.format(java.util.Locale.US, "+%,d đ", emp.allowance.toLong()), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0F172A))
                     }
                 }
             }
@@ -4474,7 +5469,7 @@ fun SeniorityPolicySettingsScreen(
     }
 }
 
-// 4. Notification Settings Screen (#cai_dat_thong_bao.png)
+// 4. Notification Settings Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
@@ -4482,6 +5477,24 @@ fun NotificationSettingsScreen(
     onBack: () -> Unit
 ) {
     val settings by viewModel.notificationSettings.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var enableSound by remember { mutableStateOf(true) }
+    var enableVibrate by remember { mutableStateOf(true) }
+    var enableSmsAlert by remember { mutableStateOf(false) }
+    var enableQuietHours by remember { mutableStateOf(false) }
+    var quietHourStart by remember { mutableStateOf("22:00") }
+    var quietHourEnd by remember { mutableStateOf("07:00") }
+    var allowVipOverride by remember { mutableStateOf(true) }
+
+    // Detailed notification categories
+    var notifyDealWon by remember { mutableStateOf(true) }
+    var notifyQuoteApproved by remember { mutableStateOf(true) }
+    var notifyPaymentDue by remember { mutableStateOf(true) }
+    var notifyEmployeeAttendance by remember { mutableStateOf(false) }
+
+    var isSendingTestNotif by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -4495,6 +5508,7 @@ fun NotificationSettingsScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color(0xFFF5F7FB)
     ) { padding ->
         Column(
@@ -4504,7 +5518,54 @@ fun NotificationSettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            SettingsGroupHeader("THÔNG BÁO ĐẨY")
+            // Status Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFDBEAFE)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.NotificationsActive,
+                            contentDescription = null,
+                            tint = Color(0xFF1D4ED8),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Hệ thống thông báo đang hoạt động",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1E3A8A)
+                        )
+                        Text(
+                            text = "Nhận thông báo công việc, lịch hẹn & báo giá tức thì",
+                            fontSize = 12.sp,
+                            color = Color(0xFF3B82F6)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 1. KÊNH THÔNG BÁO =================
+            SettingsGroupHeader("KÊNH NHẬN THÔNG BÁO")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -4513,135 +5574,94 @@ fun NotificationSettingsScreen(
             ) {
                 Column {
                     ToggleSettingItem(
-                        title = "Công việc mới",
-                        subtitle = "Nhận thông báo khi được giao việc",
+                        title = "Thông báo ứng dụng (Push)",
+                        subtitle = "Hiển thị thông báo trên thanh trạng thái điện thoại",
+                        checked = settings.systemNotice,
+                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(systemNotice = it)) }
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    ToggleSettingItem(
+                        title = "Âm thanh chuông báo",
+                        subtitle = "Phát âm thanh khi có tin nhắn & thông báo mới",
+                        checked = enableSound,
+                        onCheckedChange = { enableSound = it }
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    ToggleSettingItem(
+                        title = "Rung phản hồi",
+                        subtitle = "Rung thiết bị khi nhận thông báo quan trọng",
+                        checked = enableVibrate,
+                        onCheckedChange = { enableVibrate = it }
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    ToggleSettingItem(
+                        title = "Email tổng kết & Báo cáo",
+                        subtitle = "Nhận tóm tắt hiệu suất hàng tuần vào thứ Hai",
+                        checked = settings.weeklyReportEmail,
+                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(weeklyReportEmail = it)) }
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    ToggleSettingItem(
+                        title = "Tin nhắn SMS / Zalo ZNS khẩn cấp",
+                        subtitle = "Chỉ gửi khi có lịch hẹn quan trọng trong 1 giờ tới",
+                        checked = enableSmsAlert,
+                        onCheckedChange = { enableSmsAlert = it }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 2. NỘI DUNG THÔNG BÁO CHI TIẾT =================
+            SettingsGroupHeader("NỘI DUNG THÔNG BÁO")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column {
+                    ToggleSettingItem(
+                        title = "Nhiệm vụ & Công việc mới",
+                        subtitle = "Nhận thông báo khi được giao việc hoặc thay đổi tiến độ",
                         checked = settings.newTask,
                         onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(newTask = it)) }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
                     ToggleSettingItem(
-                        title = "Nhắc nhở hạn chót",
-                        subtitle = "Cảnh báo sắp đến hạn công việc",
+                        title = "Nhắc nhở hạn chót (Deadline)",
+                        subtitle = "Cảnh báo trước 30 phút và 1 ngày trước khi hết hạn",
                         checked = settings.deadlineReminder,
                         onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(deadlineReminder = it)) }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
                     ToggleSettingItem(
-                        title = "Cập nhật khách hàng",
-                        subtitle = "Thay đổi trạng thái hồ sơ",
+                        title = "Cập nhật hồ sơ khách hàng",
+                        subtitle = "Thông báo khi có khách mới phân phối hoặc sửa thông tin",
                         checked = settings.customerUpdate,
                         onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(customerUpdate = it)) }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
                     ToggleSettingItem(
-                        title = "Thông báo hệ thống",
-                        subtitle = "Cập nhật ứng dụng và bảo trì",
-                        checked = settings.systemNotice,
-                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(systemNotice = it)) }
+                        title = "Báo giá & Duyệt hợp đồng",
+                        subtitle = "Khách hàng chấp thuận báo giá hoặc yêu cầu chỉnh sửa",
+                        checked = notifyQuoteApproved,
+                        onCheckedChange = { notifyQuoteApproved = it }
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    ToggleSettingItem(
+                        title = "Đợt thanh toán & Thu hồi công nợ",
+                        subtitle = "Nhắc nhở các mốc thanh toán dự án đến hạn",
+                        checked = notifyPaymentDue,
+                        onCheckedChange = { notifyPaymentDue = it }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            SettingsGroupHeader("EMAIL")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                ToggleSettingItem(
-                    title = "Báo cáo hàng tuần",
-                    subtitle = "Tóm tắt hiệu suất thứ Hai",
-                    checked = settings.weeklyReportEmail,
-                    onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(weeklyReportEmail = it)) }
-                )
-            }
-        }
-    }
-}
-
-// 5. Security Screen (#bao_mat.png)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SecurityScreen(
-    viewModel: CrmViewModel,
-    onBack: () -> Unit
-) {
-    val secSettings by viewModel.securitySettings.collectAsStateWithLifecycle()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Bảo mật", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
-        containerColor = Color(0xFFF5F7FB)
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            SettingsGroupHeader("XÁC THỰC")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column {
-                    SettingsRowItem(
-                        icon = Icons.Default.VpnKey,
-                        title = "Đổi mật khẩu",
-                        subtitle = "Cập nhật mật khẩu định kỳ",
-                        onClick = { }
-                    )
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-                    ToggleSettingItem(
-                        title = "Xác thực 2 yếu tố (2FA)",
-                        subtitle = "Tăng cường bảo mật đăng nhập",
-                        checked = secSettings.twoFactorAuth,
-                        onCheckedChange = { viewModel.updateSecuritySettings(secSettings.copy(twoFactorAuth = it)) }
-                    )
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-                    ToggleSettingItem(
-                        title = "Đăng nhập sinh trắc học",
-                        subtitle = "Sử dụng Face ID hoặc Vân tay",
-                        checked = secSettings.biometricAuth,
-                        onCheckedChange = { viewModel.updateSecuritySettings(secSettings.copy(biometricAuth = it)) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SettingsGroupHeader("LỊCH SỬ ĐĂNG NHẬP")
-                Text(
-                    text = "Đăng xuất tất cả",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFE02424),
-                    modifier = Modifier
-                        .clickable { }
-                        .padding(bottom = 6.dp)
-                )
-            }
-
+            // ================= 3. KHÔNG LÀM PHIỀN =================
+            SettingsGroupHeader("CHẾ ĐỘ KHÔNG LÀM PHIỀN (DND)")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -4654,35 +5674,1038 @@ fun SecurityScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text("iPhone 14 Pro", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF0F172A))
-                            Text("Hà Nội, Việt Nam • 192.168.1.1", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Bật chế độ yên tĩnh ban đêm",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F172A)
+                            )
+                            Text(
+                                text = "Tắt chuông và rung trong khoảng thời gian nghỉ ngơi",
+                                fontSize = 12.sp,
+                                color = Color(0xFF64748B)
+                            )
                         }
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFDEF7EC))
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        Switch(
+                            checked = enableQuietHours,
+                            onCheckedChange = { enableQuietHours = it }
+                        )
+                    }
+
+                    if (enableQuietHours) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Color(0xFFF1F5F9))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Hiện tại", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                            Text("Khung giờ yên tĩnh:", fontSize = 13.sp, color = Color(0xFF475569))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFFF1F5F9))
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(quietHourStart, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                }
+                                Text(" — ", color = Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFFF1F5F9))
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(quietHourEnd, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Cho phép thông báo khẩn cấp từ VIP",
+                                fontSize = 13.sp,
+                                color = Color(0xFF0F172A)
+                            )
+                            Switch(
+                                checked = allowVipOverride,
+                                onCheckedChange = { allowVipOverride = it }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Action Buttons
+            Button(
+                onClick = {
+                    isSendingTestNotif = true
+                    scope.launch {
+                        isSendingTestNotif = false
+                        snackbarHostState.showSnackbar("🔔 Đã gửi thông báo thử nghiệm thành công đến thiết bị!")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFF1F5F9),
+                    contentColor = Color(0xFF1E293B)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Campaign,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Gửi thông báo thử nghiệm", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        snackbarHostState.showSnackbar("✅ Đã lưu cấu hình cài đặt thông báo!")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Lưu cấu hình thông báo", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+        }
+    }
+}
+
+// 5. Security Screen (Bảo mật tài khoản)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SecurityScreen(
+    viewModel: CrmViewModel,
+    onBack: () -> Unit
+) {
+    val secSettings by viewModel.securitySettings.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var currentPasswordVisible by remember { mutableStateOf(false) }
+    var newPasswordVisible by remember { mutableStateOf(false) }
+    var passwordChangeError by remember { mutableStateOf<String?>(null) }
+
+    var showBackupCodesDialog by remember { mutableStateOf(false) }
+    var showLogoutAllDialog by remember { mutableStateOf(false) }
+    var sessionList by remember {
+        mutableStateOf(
+            listOf(
+                Triple("iPhone 15 Pro Max", "Hà Nội, Việt Nam • IP: 118.70.124.88", true),
+                Triple("MacBook Pro M3 Max", "TP. Hồ Chí Minh • IP: 14.162.201.12 • 2 giờ trước", false),
+                Triple("Samsung Galaxy S24 Ultra", "Đà Nẵng, Việt Nam • IP: 27.72.63.15 • 3 ngày trước", false)
+            )
+        )
+    }
+
+    // Password strength calculation
+    val passwordStrength = remember(newPassword) {
+        if (newPassword.isEmpty()) 0f
+        else {
+            var score = 0.25f
+            if (newPassword.length >= 8) score += 0.25f
+            if (newPassword.any { it.isDigit() }) score += 0.25f
+            if (newPassword.any { !it.isLetterOrDigit() }) score += 0.25f
+            score
+        }
+    }
+    val strengthLabel = when {
+        passwordStrength <= 0.25f -> "Rất yếu"
+        passwordStrength <= 0.5f -> "Trung bình"
+        passwordStrength <= 0.75f -> "Mạnh"
+        else -> "Rất mạnh"
+    }
+    val strengthColor = when {
+        passwordStrength <= 0.25f -> Color(0xFFEF4444)
+        passwordStrength <= 0.5f -> Color(0xFFF59E0B)
+        passwordStrength <= 0.75f -> Color(0xFF3B82F6)
+        else -> Color(0xFF10B981)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Bảo mật tài khoản", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color(0xFFF5F7FB)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            // Security Score Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1E293B)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            tint = Color(0xFF34D399),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Mức độ an toàn: ",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = if (secSettings.twoFactorAuth && secSettings.biometricAuth) "TỐI ƯU (100%)" else "KHÁ (80%)",
+                                color = Color(0xFF34D399),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Tài khoản được bảo vệ bởi mã hóa đa lớp và giám sát IP",
+                            color = Color(0xFFCBD5E1),
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 1. MẬT KHẨU & ĐĂNG NHẬP =================
+            SettingsGroupHeader("MẬT KHẨU & XÁC THỰC")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column {
+                    SettingsRowItem(
+                        icon = Icons.Default.VpnKey,
+                        title = "Đổi mật khẩu",
+                        subtitle = "Lần đổi cuối: 15/08/2026 (Khuyến nghị 90 ngày)",
+                        badge = "BẢO VỆ",
+                        badgeBg = Color(0xFFEFF6FF),
+                        badgeColor = Color(0xFF1D4ED8),
+                        onClick = {
+                            currentPassword = ""
+                            newPassword = ""
+                            confirmPassword = ""
+                            passwordChangeError = null
+                            showChangePasswordDialog = true
+                        }
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // 2FA Toggle
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFEFF6FF)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LockReset,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1D4ED8),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Xác thực 2 yếu tố (2FA)",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF0F172A)
+                                )
+                                Text(
+                                    text = "Mã OTP qua Authenticator hoặc tin nhắn SMS",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = secSettings.twoFactorAuth,
+                            onCheckedChange = {
+                                viewModel.updateSecuritySettings(secSettings.copy(twoFactorAuth = it))
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        if (it) "Đã bật xác thực 2 bước (2FA)" else "Đã tắt xác thực 2 bước"
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    if (secSettings.twoFactorAuth) {
+                        HorizontalDivider(color = Color(0xFFF8FAFC))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showBackupCodesDialog = true }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "🔑 Xem 8 mã dự phòng (Backup Codes)",
+                                fontSize = 13.sp,
+                                color = Color(0xFF1D4ED8),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = Color(0xFF94A3B8)
+                            )
                         }
                     }
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFF1F5F9))
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Biometrics Toggle
+                    ToggleSettingItem(
+                        title = "Đăng nhập sinh trắc học",
+                        subtitle = "Mở khóa nhanh bằng Vân tay hoặc Face ID",
+                        checked = secSettings.biometricAuth,
+                        onCheckedChange = {
+                            viewModel.updateSecuritySettings(secSettings.copy(biometricAuth = it))
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    if (it) "Đã bật đăng nhập sinh trắc học" else "Đã tắt sinh trắc học"
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 2. QUẢN LÝ PHIÊN ĐĂNG NHẬP =================
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SettingsGroupHeader("THIẾT BỊ & PHIÊN ĐĂNG NHẬP")
+                if (sessionList.size > 1) {
+                    Text(
+                        text = "Đăng xuất tất cả",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFDC2626),
+                        modifier = Modifier
+                            .clickable { showLogoutAllDialog = true }
+                            .padding(bottom = 6.dp)
+                    )
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    sessionList.forEachIndexed { index, (deviceName, deviceDetails, isCurrent) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isCurrent) Color(0xFFECFDF5) else Color(0xFFF1F5F9)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (deviceName.contains("MacBook") || deviceName.contains("PC")) Icons.Default.LaptopMac else Icons.Default.PhoneAndroid,
+                                        contentDescription = null,
+                                        tint = if (isCurrent) Color(0xFF059669) else Color(0xFF64748B),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = deviceName,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                    Text(
+                                        text = deviceDetails,
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                }
+                            }
+
+                            if (isCurrent) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0xFFDEF7EC))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text("Hiện tại", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                }
+                            } else {
+                                IconButton(
+                                    onClick = {
+                                        sessionList = sessionList.filter { it.first != deviceName }
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Đã thu hồi phiên đăng nhập: $deviceName")
+                                        }
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Revoke",
+                                        tint = Color(0xFF94A3B8),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        if (index < sessionList.size - 1) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF1F5F9))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 3. NHẬT KÝ HOẠT ĐỘNG BẢO MẬT =================
+            SettingsGroupHeader("NHẬT KÝ BẢO MẬT GẦN ĐÂY")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    listOf(
+                        Triple("Đăng nhập thành công từ thiết bị mới", "Hôm nay, 08:30 • IP: 118.70.124.88", Color(0xFF10B981)),
+                        Triple("Bật xác thực sinh trắc học", "28/08/2026, 14:15", Color(0xFF3B82F6)),
+                        Triple("Cập nhật mật khẩu định kỳ", "15/08/2026, 09:00", Color(0xFF6366F1))
+                    ).forEachIndexed { idx, (logTitle, logTime, dotColor) ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(dotColor)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(logTitle, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                                Text(logTime, fontSize = 11.sp, color = Color(0xFF94A3B8))
+                            }
+                        }
+                        if (idx < 2) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+        }
+    }
+
+    // ================= CHANGE PASSWORD DIALOG =================
+    if (showChangePasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showChangePasswordDialog = false },
+            title = {
+                Text("Đổi mật khẩu tài khoản", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+            },
+            text = {
+                Column {
+                    Text(
+                        "Mật khẩu cần tối thiểu 8 ký tự, bao gồm chữ số và ký tự đặc biệt.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF64748B)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = currentPassword,
+                        onValueChange = { currentPassword = it },
+                        label = { Text("Mật khẩu hiện tại") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = if (currentPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { currentPasswordVisible = !currentPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (currentPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null,
+                                    tint = Color(0xFF94A3B8)
+                                )
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("Mật khẩu mới") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (newPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null,
+                                    tint = Color(0xFF94A3B8)
+                                )
+                            }
+                        }
+                    )
+
+                    if (newPassword.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        LinearProgressIndicator(
+                            progress = { passwordStrength },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp)),
+                            color = strengthColor,
+                            trackColor = Color(0xFFE2E8F0)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Độ mạnh: $strengthLabel",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = strengthColor
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text("Xác nhận mật khẩu mới") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation()
+                    )
+
+                    passwordChangeError?.let { err ->
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(err, color = Color(0xFFDC2626), fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (currentPassword.isBlank()) {
+                            passwordChangeError = "Vui lòng nhập mật khẩu hiện tại"
+                        } else if (newPassword.length < 6) {
+                            passwordChangeError = "Mật khẩu mới phải có ít nhất 6 ký tự"
+                        } else if (newPassword != confirmPassword) {
+                            passwordChangeError = "Mật khẩu xác nhận không trùng khớp"
+                        } else {
+                            showChangePasswordDialog = false
+                            scope.launch {
+                                snackbarHostState.showSnackbar("🎉 Đã đổi mật khẩu thành công!")
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary)
+                ) {
+                    Text("Cập nhật")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showChangePasswordDialog = false }) {
+                    Text("Hủy", color = Color(0xFF64748B))
+                }
+            }
+        )
+    }
+
+    // ================= BACKUP CODES DIALOG =================
+    if (showBackupCodesDialog) {
+        AlertDialog(
+            onDismissRequest = { showBackupCodesDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Default.Key, contentDescription = null, tint = Color(0xFF1D4ED8))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Mã dự phòng 2FA", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        "Lưu các mã này ở nơi an toàn. Mỗi mã chỉ có thể sử dụng 1 lần khi không nhận được OTP:",
+                        fontSize = 12.sp,
+                        color = Color(0xFF64748B)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val codes = listOf(
+                        "8492 - 1048", "3957 - 8201",
+                        "4819 - 9923", "7103 - 4820",
+                        "2048 - 6192", "9910 - 3847",
+                        "1284 - 5509", "6732 - 1109"
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF1F5F9))
+                            .padding(12.dp)
+                    ) {
+                        codes.chunked(2).forEach { rowCodes ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(rowCodes[0], fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                if (rowCodes.size > 1) {
+                                    Text(rowCodes[1], fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showBackupCodesDialog = false
+                        scope.launch {
+                            snackbarHostState.showSnackbar("📋 Đã sao chép danh sách 8 mã dự phòng!")
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary)
+                ) {
+                    Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Sao chép mã")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBackupCodesDialog = false }) {
+                    Text("Đóng", color = Color(0xFF64748B))
+                }
+            }
+        )
+    }
+
+    // ================= LOGOUT ALL SESSIONS DIALOG =================
+    if (showLogoutAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutAllDialog = false },
+            title = { Text("Đăng xuất tất cả thiết bị khác?", fontWeight = FontWeight.Bold) },
+            text = { Text("Mọi phiên đăng nhập trên các máy tính, điện thoại khác sẽ bị thu hồi ngay lập tức.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        sessionList = sessionList.filter { it.third }
+                        showLogoutAllDialog = false
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Đã đăng xuất khỏi tất cả các thiết bị khác!")
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) {
+                    Text("Đăng xuất hết")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutAllDialog = false }) {
+                    Text("Hủy", color = Color(0xFF64748B))
+                }
+            }
+        )
+    }
+}
+
+// 6. Backup & Cloud Sync Screen (Sao lưu & Đồng bộ đám mây)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BackupAndSyncScreen(
+    viewModel: CrmViewModel,
+    onBack: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var isSyncingNow by remember { mutableStateOf(false) }
+    var autoBackupFrequency by remember { mutableStateOf("Hàng ngày") }
+    var backupOnlyWifi by remember { mutableStateOf(true) }
+    var keepBackupDays by remember { mutableStateOf("30 ngày") }
+    var lastBackupTime by remember { mutableStateOf("Hôm nay, 08:30 AM") }
+    var lastBackupSize by remember { mutableStateOf("16.2 MB") }
+
+    var showRestoreConfirmDialog by remember { mutableStateOf<String?>(null) }
+    var isExporting by remember { mutableStateOf<String?>(null) }
+
+    val restorePoints = remember {
+        listOf(
+            Triple("Bản sao lưu tự động #03", "Hôm nay lúc 08:30 AM • 16.2 MB • 240 khách hàng, 58 báo giá", "16.2 MB"),
+            Triple("Bản sao lưu tự động #02", "Hôm qua lúc 23:00 PM • 15.9 MB • 236 khách hàng, 54 báo giá", "15.9 MB"),
+            Triple("Bản sao lưu trước bảo trì #01", "27/08/2026 lúc 18:00 • 15.5 MB • 230 khách hàng", "15.5 MB")
+        )
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Sao lưu & Đồng bộ", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color(0xFFF5F7FB)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            // Status Cloud Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFECFDF5)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudDone,
+                                contentDescription = null,
+                                tint = Color(0xFF059669),
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Đám mây Google Cloud / Firebase",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = Color(0xFF0F172A)
+                            )
+                            Text(
+                                text = "Lần sao lưu gần nhất: $lastBackupTime ($lastBackupSize)",
+                                fontSize = 12.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = {
+                            isSyncingNow = true
+                            scope.launch {
+                                lastBackupTime = "Vừa xong"
+                                isSyncingNow = false
+                                snackbarHostState.showSnackbar("☁️ Đã sao lưu dữ liệu toàn diện lên Cloud thành công!")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSyncingNow,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        if (isSyncingNow) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Đang đồng bộ dữ liệu...", fontSize = 13.sp)
+                        } else {
+                            Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Đồng bộ & Sao lưu ngay", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 1. CẤU HÌNH TỰ ĐỘNG =================
+            SettingsGroupHeader("CẤU HÌNH SAO LƯU TỰ ĐỘNG")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Tần suất sao lưu tự động", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("Hàng ngày", "Hàng tuần", "Thủ công").forEach { freq ->
+                            val isSel = autoBackupFrequency == freq
+                            FilterChip(
+                                selected = isSel,
+                                onClick = { autoBackupFrequency = freq },
+                                label = { Text(freq, fontSize = 12.sp, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text("MacBook Pro M2", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF0F172A))
-                            Text("TP. Hồ Chí Minh • 192.168.1.5", fontSize = 12.sp, color = Color(0xFF64748B))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Chỉ sao lưu qua Wi-Fi", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0F172A))
+                            Text("Tiết kiệm dung lượng 4G/5G của bạn", fontSize = 11.sp, color = Color(0xFF64748B))
+                        }
+                        Switch(checked = backupOnlyWifi, onCheckedChange = { backupOnlyWifi = it })
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 2. ĐIỂM KHÔI PHỤC DỮ LIỆU =================
+            SettingsGroupHeader("CÁC ĐIỂM KHÔI PHỤC (RESTORE POINTS)")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    restorePoints.forEachIndexed { index, (pointTitle, pointDesc, _) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(pointTitle, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                Text(pointDesc, fontSize = 11.sp, color = Color(0xFF64748B))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { showRestoreConfirmDialog = pointTitle },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFEFF6FF),
+                                    contentColor = Color(0xFF1D4ED8)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text("Khôi phục", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        if (index < restorePoints.size - 1) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF1F5F9))
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ================= 3. XUẤT DỮ LIỆU EXCEL / CSV =================
+            SettingsGroupHeader("XUẤT & TẢI XUỐNG DỮ LIỆU")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column {
+                    listOf(
+                        Pair("Danh sách Khách hàng & Cơ hội", "customers_export.xlsx"),
+                        Pair("Lịch sử Báo giá & Hợp đồng", "quotes_export.xlsx"),
+                        Pair("Bảng Chấm công & Lương nhân viên", "payroll_export.xlsx")
+                    ).forEachIndexed { idx, (exportTitle, fileName) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("📥 Đã xuất thành công tệp: $fileName")
+                                    }
+                                }
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.TableView,
+                                    contentDescription = null,
+                                    tint = Color(0xFF059669),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(exportTitle, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                                    Text(fileName, fontSize = 11.sp, color = Color(0xFF64748B))
+                                }
+                            }
+                            Icon(imageVector = Icons.Default.Download, contentDescription = "Download", tint = Color(0xFF059669), modifier = Modifier.size(18.dp))
+                        }
+                        if (idx < 2) {
+                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
         }
+    }
+
+    // RESTORE CONFIRM DIALOG
+    showRestoreConfirmDialog?.let { title ->
+        AlertDialog(
+            onDismissRequest = { showRestoreConfirmDialog = null },
+            title = { Text("Xác nhận khôi phục dữ liệu?", fontWeight = FontWeight.Bold) },
+            text = { Text("Ứng dụng sẽ hoàn nguyên dữ liệu về thời điểm của '$title'. Các thay đổi sau thời điểm này có thể bị ghi đè.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRestoreConfirmDialog = null
+                        scope.launch {
+                            snackbarHostState.showSnackbar("✅ Đã khôi phục dữ liệu thành công từ: $title")
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D4ED8))
+                ) {
+                    Text("Xác nhận khôi phục")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestoreConfirmDialog = null }) {
+                    Text("Hủy", color = Color(0xFF64748B))
+                }
+            }
+        )
     }
 }
 

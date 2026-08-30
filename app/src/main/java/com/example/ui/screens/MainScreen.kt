@@ -118,7 +118,9 @@ enum class FullScreenMode {
     SECURITY,
     UPGRADE,
     EDIT_PROFILE,
-    SENIORITY_SETTINGS
+    SENIORITY_SETTINGS,
+    ACCOUNT_SETTINGS,
+    BACKUP_SYNC
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -357,6 +359,23 @@ fun MainScreen(viewModel: CrmViewModel) {
         }
         FullScreenMode.UPGRADE -> {
             UpgradeAccountScreen(
+                viewModel = viewModel,
+                onBack = { fullScreenMode = FullScreenMode.NONE }
+            )
+            return
+        }
+        FullScreenMode.ACCOUNT_SETTINGS -> {
+            AccountSettingsScreen(
+                viewModel = viewModel,
+                onNavigateToEditProfile = { fullScreenMode = FullScreenMode.EDIT_PROFILE },
+                onNavigateToSecurity = { fullScreenMode = FullScreenMode.SECURITY },
+                onBack = { fullScreenMode = FullScreenMode.NONE },
+                onLogout = { viewModel.logout() }
+            )
+            return
+        }
+        FullScreenMode.BACKUP_SYNC -> {
+            BackupAndSyncScreen(
                 viewModel = viewModel,
                 onBack = { fullScreenMode = FullScreenMode.NONE }
             )
@@ -640,6 +659,7 @@ fun MainScreen(viewModel: CrmViewModel) {
                         NavigationItem.ACCOUNT -> SettingsHubScreen(
                             viewModel = viewModel,
                             onNavigateToEditProfile = { fullScreenMode = FullScreenMode.EDIT_PROFILE },
+                            onNavigateToAccountSettings = { fullScreenMode = FullScreenMode.ACCOUNT_SETTINGS },
                             onNavigateToQuotes = {
                                 quotesInitialTab = 0
                                 fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
@@ -651,6 +671,7 @@ fun MainScreen(viewModel: CrmViewModel) {
                             onNavigateToCustomerTypes = { fullScreenMode = FullScreenMode.CUSTOMER_TYPES },
                             onNavigateToNotifications = { fullScreenMode = FullScreenMode.NOTIFICATIONS },
                             onNavigateToSecurity = { fullScreenMode = FullScreenMode.SECURITY },
+                            onNavigateToBackupSync = { fullScreenMode = FullScreenMode.BACKUP_SYNC },
                             onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE },
                             onNavigateToReports = { fullScreenMode = FullScreenMode.REPORTS },
                             onNavigateToOverview = { fullScreenMode = FullScreenMode.ACCOUNT_OVERVIEW },
