@@ -833,6 +833,16 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
         userPreferences.setLoggedIn(false)
     }
 
+    fun deleteAccount(email: String? = null) {
+        val targetEmail = email ?: _userProfile.value.email
+        if (targetEmail.isNotBlank()) {
+            userPreferences.deleteAccount(targetEmail)
+        }
+        userPreferences.clearUserData()
+        _isLoggedIn.value = false
+        _userProfile.value = UserProfile()
+    }
+
     fun updateUserProfile(profile: UserProfile) {
         _userProfile.value = profile
         userPreferences.saveUserProfile(profile)

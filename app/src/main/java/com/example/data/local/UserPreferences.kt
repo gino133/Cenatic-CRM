@@ -110,6 +110,25 @@ class UserPreferences(context: Context) {
         saveAllAccounts(current)
     }
 
+    fun deleteAccount(email: String) {
+        val current = getRegisteredAccounts().filter { !it.email.equals(email, ignoreCase = true) }
+        saveAllAccounts(current)
+    }
+
+    fun clearUserData() {
+        prefs.edit()
+            .remove(KEY_EMAIL)
+            .remove(KEY_FULL_NAME)
+            .remove(KEY_PHONE)
+            .remove(KEY_DOB)
+            .remove(KEY_ADDRESS)
+            .remove(KEY_ROLE)
+            .remove(KEY_AVATAR_URL)
+            .remove(KEY_IS_VIP)
+            .putBoolean(KEY_IS_LOGGED_IN, false)
+            .apply()
+    }
+
     private fun saveAllAccounts(accounts: List<LocalAccount>) {
         try {
             val jsonArray = JSONArray()

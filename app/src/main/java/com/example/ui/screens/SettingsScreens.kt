@@ -185,6 +185,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Close
 import com.example.data.model.SeniorityMilestone
 import com.example.data.model.defaultSeniorityMilestones
 import kotlinx.coroutines.launch
@@ -502,7 +506,7 @@ fun SettingsHubScreen(
                 SettingsRowItem(
                     icon = Icons.Default.ManageAccounts,
                     title = "Cài đặt tài khoản",
-                    subtitle = "Thông tin cá nhân, giao diện, ngôn ngữ & bảo mật",
+                    subtitle = "Thông tin cá nhân, giao diện, ngôn ngữ & tiền tệ",
                     onClick = onNavigateToAccountSettings
                 )
                 HorizontalDivider(color = Color(0xFFF1F5F9))
@@ -809,11 +813,6 @@ fun AccountSettingsScreen(
     var selectedDateFormat by remember { mutableStateOf("DD/MM/YYYY") }
     var fontScale by remember { mutableStateOf("standard") }
     var enableSmoothAnim by remember { mutableStateOf(true) }
-    var enableAutoSync by remember { mutableStateOf(true) }
-    var enableBiometrics by remember { mutableStateOf(true) }
-    var enable2FA by remember { mutableStateOf(false) }
-    var cacheSizeText by remember { mutableStateOf("14.8 MB") }
-    var isCleaningCache by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val accentColors = listOf(
@@ -1412,253 +1411,7 @@ fun AccountSettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ================= 4. BẢO MẬT & ĐĂNG NHẬP =================
-            SettingsGroupHeader("BẢO MẬT & ĐĂNG NHẬP")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column {
-                    SettingsRowItem(
-                        icon = Icons.Default.Lock,
-                        title = "Đổi mật khẩu tài khoản",
-                        subtitle = "Cập nhật mật khẩu định kỳ 90 ngày",
-                        onClick = onNavigateToSecurity
-                    )
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                    // 2FA Switch row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFFEFF6FF)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.VpnKey,
-                                    contentDescription = null,
-                                    tint = Color(0xFF1D4ED8),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Xác thực 2 bước (2FA)",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF0F172A)
-                                )
-                                Text(
-                                    text = "Bảo vệ tài khoản qua mã OTP SMS/Email",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
-                        }
-                        Switch(
-                            checked = enable2FA,
-                            onCheckedChange = {
-                                enable2FA = it
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        if (it) "Đã bật xác thực 2 bước 2FA" else "Đã tắt xác thực 2 bước"
-                                    )
-                                }
-                            }
-                        )
-                    }
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                    // Biometrics switch row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFFECFDF5)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Fingerprint,
-                                    contentDescription = null,
-                                    tint = Color(0xFF059669),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Mở khóa sinh trắc học",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF0F172A)
-                                )
-                                Text(
-                                    text = "Sử dụng vân tay hoặc nhận diện khuôn mặt",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
-                        }
-                        Switch(
-                            checked = enableBiometrics,
-                            onCheckedChange = {
-                                enableBiometrics = it
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        if (it) "Đã bật đăng nhập bằng sinh trắc học" else "Đã tắt sinh trắc học"
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ================= 5. DỮ LIỆU & BỘ NHỚ =================
-            SettingsGroupHeader("DỮ LIỆU & BỘ NHỚ")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFFF0FDF4)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CloudDone,
-                                    contentDescription = null,
-                                    tint = Color(0xFF16A34A),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Tự động đồng bộ đám mây",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF0F172A)
-                                )
-                                Text(
-                                    text = "Đồng bộ khách hàng và báo giá tức thì",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
-                        }
-                        Switch(
-                            checked = enableAutoSync,
-                            onCheckedChange = { enableAutoSync = it }
-                        )
-                    }
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                    // Clean cache row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFFFEF3C7)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CleaningServices,
-                                    contentDescription = null,
-                                    tint = Color(0xFFD97706),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Dọn dẹp bộ nhớ đệm",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF0F172A)
-                                )
-                                Text(
-                                    text = "Dung lượng cache hiện tại: $cacheSizeText",
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF64748B)
-                                )
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                if (cacheSizeText != "0 MB") {
-                                    isCleaningCache = true
-                                    scope.launch {
-                                        cacheSizeText = "0 MB"
-                                        isCleaningCache = false
-                                        snackbarHostState.showSnackbar("Đã dọn dẹp sạch 14.8 MB bộ nhớ tạm!")
-                                    }
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (cacheSizeText == "0 MB") Color(0xFFE2E8F0) else Color(0xFFFEF3C7),
-                                contentColor = if (cacheSizeText == "0 MB") Color(0xFF94A3B8) else Color(0xFFB45309)
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = if (cacheSizeText == "0 MB") "Đã dọn" else "Dọn dẹp",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ================= 6. THÔNG TIN ỨNG DỤNG =================
+            // ================= 4. THÔNG TIN ỨNG DỤNG =================
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -1688,7 +1441,7 @@ fun AccountSettingsScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ================= 7. ĐĂNG XUẤT =================
+            // ================= 5. ĐĂNG XUẤT =================
             Button(
                 onClick = { showLogoutDialog = true },
                 modifier = Modifier.fillMaxWidth(),
@@ -6014,8 +5767,18 @@ fun SecurityScreen(
     onBack: () -> Unit
 ) {
     val secSettings by viewModel.securitySettings.collectAsStateWithLifecycle()
+    val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val isDemoAccount = remember(userProfile.email, userProfile.fullName) {
+        userProfile.email.isBlank() ||
+        userProfile.email.contains("demo", ignoreCase = true) ||
+        userProfile.email.contains("test", ignoreCase = true) ||
+        userProfile.email.equals("admin@crm.vn", ignoreCase = true) ||
+        userProfile.fullName.contains("demo", ignoreCase = true) ||
+        userProfile.fullName.contains("test", ignoreCase = true)
+    }
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var currentPassword by remember { mutableStateOf("") }
@@ -6023,9 +5786,17 @@ fun SecurityScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
     var passwordChangeError by remember { mutableStateOf<String?>(null) }
 
-    var showBackupCodesDialog by remember { mutableStateOf(false) }
+    var showAuthenticatorSetupDialog by remember { mutableStateOf(false) }
+    var authOtpCode by remember { mutableStateOf("") }
+    var authOtpError by remember { mutableStateOf<String?>(null) }
+
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var deleteConfirmationInput by remember { mutableStateOf("") }
+    var deleteError by remember { mutableStateOf<String?>(null) }
+
     var showLogoutAllDialog by remember { mutableStateOf(false) }
     var sessionList by remember {
         mutableStateOf(
@@ -6037,27 +5808,34 @@ fun SecurityScreen(
         )
     }
 
-    // Password strength calculation
+    // Password criteria check
+    val hasMinLength = newPassword.length >= 8
+    val hasUppercase = newPassword.any { it.isUpperCase() }
+    val hasLowercase = newPassword.any { it.isLowerCase() }
+    val hasDigit = newPassword.any { it.isDigit() }
+    val hasSpecial = newPassword.any { !it.isLetterOrDigit() }
+    val isPasswordStrictValid = hasMinLength && hasUppercase && hasLowercase && hasDigit && hasSpecial
+
     val passwordStrength = remember(newPassword) {
         if (newPassword.isEmpty()) 0f
         else {
-            var score = 0.25f
-            if (newPassword.length >= 8) score += 0.25f
-            if (newPassword.any { it.isDigit() }) score += 0.25f
-            if (newPassword.any { !it.isLetterOrDigit() }) score += 0.25f
+            var score = 0f
+            if (hasMinLength) score += 0.2f
+            if (hasUppercase) score += 0.2f
+            if (hasLowercase) score += 0.2f
+            if (hasDigit) score += 0.2f
+            if (hasSpecial) score += 0.2f
             score
         }
     }
     val strengthLabel = when {
-        passwordStrength <= 0.25f -> "Rất yếu"
-        passwordStrength <= 0.5f -> "Trung bình"
-        passwordStrength <= 0.75f -> "Mạnh"
-        else -> "Rất mạnh"
+        passwordStrength <= 0.4f -> "Yếu"
+        passwordStrength <= 0.8f -> "Khá"
+        else -> "Rất mạnh (Đầy đủ tiêu chuẩn)"
     }
     val strengthColor = when {
-        passwordStrength <= 0.25f -> Color(0xFFEF4444)
-        passwordStrength <= 0.5f -> Color(0xFFF59E0B)
-        passwordStrength <= 0.75f -> Color(0xFF3B82F6)
+        passwordStrength <= 0.4f -> Color(0xFFEF4444)
+        passwordStrength <= 0.8f -> Color(0xFFF59E0B)
         else -> Color(0xFF10B981)
     }
 
@@ -6081,24 +5859,24 @@ fun SecurityScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
-            // Security Score Card
+            // Security Score Card (Compact)
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
+                        .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(50.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
                             .background(Color(0xFF1E293B)),
                         contentAlignment = Alignment.Center
@@ -6107,49 +5885,188 @@ fun SecurityScreen(
                             imageVector = Icons.Default.Shield,
                             contentDescription = null,
                             tint = Color(0xFF34D399),
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "Mức độ an toàn: ",
                                 color = Color(0xFF94A3B8),
-                                fontSize = 13.sp
+                                fontSize = 12.sp
                             )
                             Text(
                                 text = if (secSettings.twoFactorAuth && secSettings.biometricAuth) "TỐI ƯU (100%)" else "KHÁ (80%)",
                                 color = Color(0xFF34D399),
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Tài khoản được bảo vệ bởi mã hóa đa lớp và giám sát IP",
+                            text = "Bảo vệ bởi mã hóa AES-256, xác thực TOTP Authenticator và giám sát IP",
                             color = Color(0xFFCBD5E1),
-                            fontSize = 12.sp
+                            fontSize = 11.sp
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // ================= 1. MẬT KHẨU & ĐĂNG NHẬP =================
+            // ================= 1. THIẾT BỊ & PHIÊN ĐĂNG NHẬP =================
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SettingsGroupHeader("THIẾT BỊ & PHIÊN ĐĂNG NHẬP")
+                if (sessionList.size > 1) {
+                    Text(
+                        text = "Đăng xuất tất cả",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFDC2626),
+                        modifier = Modifier
+                            .clickable { showLogoutAllDialog = true }
+                            .padding(bottom = 4.dp)
+                    )
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    sessionList.forEachIndexed { index, (deviceName, deviceDetails, isCurrent) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (isCurrent) Color(0xFFECFDF5) else Color(0xFFF1F5F9)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (deviceName.contains("MacBook") || deviceName.contains("PC")) Icons.Default.LaptopMac else Icons.Default.PhoneAndroid,
+                                        contentDescription = null,
+                                        tint = if (isCurrent) Color(0xFF059669) else Color(0xFF64748B),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = deviceName,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                    Text(
+                                        text = deviceDetails,
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                }
+                            }
+
+                            if (isCurrent) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color(0xFFDEF7EC))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text("Hiện tại", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                                }
+                            } else {
+                                IconButton(
+                                    onClick = {
+                                        sessionList = sessionList.filter { it.first != deviceName }
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Đã thu hồi phiên đăng nhập: $deviceName")
+                                        }
+                                    },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Revoke",
+                                        tint = Color(0xFF94A3B8),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        if (index < sessionList.size - 1) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFF1F5F9))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // ================= 2. NHẬT KÝ HOẠT ĐỘNG BẢO MẬT =================
+            SettingsGroupHeader("NHẬT KÝ BẢO MẬT GẦN ĐÂY")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    listOf(
+                        Triple("Đăng nhập thành công từ thiết bị mới", "Hôm nay, 08:30 • IP: 118.70.124.88", Color(0xFF10B981)),
+                        Triple("Cập nhật xác thực 2 bước qua Authenticator", "28/08/2026, 14:15", Color(0xFF3B82F6)),
+                        Triple("Cập nhật mật khẩu bảo mật định kỳ", "15/08/2026, 09:00", Color(0xFF6366F1))
+                    ).forEachIndexed { idx, (logTitle, logTime, dotColor) ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(dotColor)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(logTitle, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                                Text(logTime, fontSize = 10.sp, color = Color(0xFF94A3B8))
+                            }
+                        }
+                        if (idx < 2) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // ================= 3. MẬT KHẨU & XÁC THỰC (ĐƯA XUỐNG DƯỚI) =================
             SettingsGroupHeader("MẬT KHẨU & XÁC THỰC")
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column {
+                    // Đổi mật khẩu
                     SettingsRowItem(
                         icon = Icons.Default.VpnKey,
                         title = "Đổi mật khẩu",
-                        subtitle = "Lần đổi cuối: 15/08/2026 (Khuyến nghị 90 ngày)",
+                        subtitle = "Yêu cầu: Chữ hoa, thường, số, ký tự đặc biệt, tối thiểu 8 ký tự",
                         badge = "BẢO VỆ",
                         badgeBg = Color(0xFFEFF6FF),
                         badgeColor = Color(0xFF1D4ED8),
@@ -6163,19 +6080,19 @@ fun SecurityScreen(
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
 
-                    // 2FA Toggle
+                    // 2FA qua Authenticator
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .size(32.dp)
+                                    .clip(RoundedCornerShape(6.dp))
                                     .background(Color(0xFFEFF6FF)),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -6183,59 +6100,55 @@ fun SecurityScreen(
                                     imageVector = Icons.Default.LockReset,
                                     contentDescription = null,
                                     tint = Color(0xFF1D4ED8),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Xác thực 2 yếu tố (2FA)",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        color = Color(0xFFF0FDF4),
+                                        shape = RoundedCornerShape(4.dp),
+                                        border = BorderStroke(1.dp, Color(0xFFDCFCE7))
+                                    ) {
+                                        Text(
+                                            text = "AUTHENTICATOR",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF16A34A),
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = "Xác thực 2 yếu tố (2FA)",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF0F172A)
-                                )
-                                Text(
-                                    text = "Mã OTP qua Authenticator hoặc tin nhắn SMS",
-                                    fontSize = 12.sp,
+                                    text = "Mã OTP thời gian thực qua Google Authenticator / Microsoft Authenticator",
+                                    fontSize = 11.sp,
                                     color = Color(0xFF64748B)
                                 )
                             }
                         }
                         Switch(
                             checked = secSettings.twoFactorAuth,
-                            onCheckedChange = {
-                                viewModel.updateSecuritySettings(secSettings.copy(twoFactorAuth = it))
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        if (it) "Đã bật xác thực 2 bước (2FA)" else "Đã tắt xác thực 2 bước"
-                                    )
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    authOtpCode = ""
+                                    authOtpError = null
+                                    showAuthenticatorSetupDialog = true
+                                } else {
+                                    viewModel.updateSecuritySettings(secSettings.copy(twoFactorAuth = false))
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Đã tắt xác thực 2 yếu tố")
+                                    }
                                 }
                             }
                         )
-                    }
-
-                    if (secSettings.twoFactorAuth) {
-                        HorizontalDivider(color = Color(0xFFF8FAFC))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showBackupCodesDialog = true }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "🔑 Xem 8 mã dự phòng (Backup Codes)",
-                                fontSize = 13.sp,
-                                color = Color(0xFF1D4ED8),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = Color(0xFF94A3B8)
-                            )
-                        }
                     }
 
                     HorizontalDivider(color = Color(0xFFF1F5F9))
@@ -6243,7 +6156,7 @@ fun SecurityScreen(
                     // Biometrics Toggle
                     ToggleSettingItem(
                         title = "Đăng nhập sinh trắc học",
-                        subtitle = "Mở khóa nhanh bằng Vân tay hoặc Face ID",
+                        subtitle = "Mở khóa an toàn nhanh bằng Vân tay hoặc Face ID",
                         checked = secSettings.biometricAuth,
                         onCheckedChange = {
                             viewModel.updateSecuritySettings(secSettings.copy(biometricAuth = it))
@@ -6257,145 +6170,81 @@ fun SecurityScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // ================= 2. QUẢN LÝ PHIÊN ĐĂNG NHẬP =================
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SettingsGroupHeader("THIẾT BỊ & PHIÊN ĐĂNG NHẬP")
-                if (sessionList.size > 1) {
-                    Text(
-                        text = "Đăng xuất tất cả",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFDC2626),
-                        modifier = Modifier
-                            .clickable { showLogoutAllDialog = true }
-                            .padding(bottom = 6.dp)
-                    )
-                }
-            }
-
+            // ================= 4. VÙNG NGUY HIỂM: XÓA TÀI KHOẢN =================
+            Text(
+                text = "VÙNG NGUY HIỂM",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFDC2626),
+                letterSpacing = 1.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp)
+            )
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+                border = BorderStroke(1.dp, Color(0xFFFECACA)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    sessionList.forEachIndexed { index, (deviceName, deviceDetails, isCurrent) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFFEE2E2)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isCurrent) Color(0xFFECFDF5) else Color(0xFFF1F5F9)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (deviceName.contains("MacBook") || deviceName.contains("PC")) Icons.Default.LaptopMac else Icons.Default.PhoneAndroid,
-                                        contentDescription = null,
-                                        tint = if (isCurrent) Color(0xFF059669) else Color(0xFF64748B),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = deviceName,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        color = Color(0xFF0F172A)
-                                    )
-                                    Text(
-                                        text = deviceDetails,
-                                        fontSize = 11.sp,
-                                        color = Color(0xFF64748B)
-                                    )
-                                }
-                            }
-
-                            if (isCurrent) {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(Color(0xFFDEF7EC))
-                                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                                ) {
-                                    Text("Hiện tại", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
-                                }
-                            } else {
-                                IconButton(
-                                    onClick = {
-                                        sessionList = sessionList.filter { it.first != deviceName }
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar("Đã thu hồi phiên đăng nhập: $deviceName")
-                                        }
-                                    },
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Revoke",
-                                        tint = Color(0xFF94A3B8),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        if (index < sessionList.size - 1) {
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = Color(0xFFF1F5F9))
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ================= 3. NHẬT KÝ HOẠT ĐỘNG BẢO MẬT =================
-            SettingsGroupHeader("NHẬT KÝ BẢO MẬT GẦN ĐÂY")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    listOf(
-                        Triple("Đăng nhập thành công từ thiết bị mới", "Hôm nay, 08:30 • IP: 118.70.124.88", Color(0xFF10B981)),
-                        Triple("Bật xác thực sinh trắc học", "28/08/2026, 14:15", Color(0xFF3B82F6)),
-                        Triple("Cập nhật mật khẩu định kỳ", "15/08/2026, 09:00", Color(0xFF6366F1))
-                    ).forEachIndexed { idx, (logTitle, logTime, dotColor) ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(dotColor)
+                            Icon(
+                                imageVector = Icons.Default.DeleteForever,
+                                contentDescription = "Delete Account",
+                                tint = Color(0xFFDC2626),
+                                modifier = Modifier.size(20.dp)
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(logTitle, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
-                                Text(logTime, fontSize = 11.sp, color = Color(0xFF94A3B8))
-                            }
                         }
-                        if (idx < 2) {
-                            Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Xóa tài khoản vĩnh viễn",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Color(0xFF991B1B)
+                            )
+                            Text(
+                                text = "Xóa toàn bộ thông tin tài khoản, hồ sơ và phiên đăng nhập khỏi hệ thống",
+                                fontSize = 11.sp,
+                                color = Color(0xFFB91C1C)
+                            )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(
+                        onClick = {
+                            deleteConfirmationInput = ""
+                            deleteError = null
+                            showDeleteAccountDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().height(40.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Thực thi xóa tài khoản", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -6408,12 +6257,40 @@ fun SecurityScreen(
             },
             text = {
                 Column {
-                    Text(
-                        "Mật khẩu cần tối thiểu 8 ký tự, bao gồm chữ số và ký tự đặc biệt.",
-                        fontSize = 12.sp,
-                        color = Color(0xFF64748B)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    if (isDemoAccount) {
+                        Surface(
+                            color = Color(0xFFEFF6FF),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = Color(0xFF2563EB),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Tài khoản Demo/Test: Cho phép mật khẩu tùy ý để bạn tiện kiểm thử.",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF1E40AF)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    } else {
+                        Text(
+                            "Mật khẩu phải đáp ứng đủ các yếu tố bảo mật:",
+                            fontSize = 12.sp,
+                            color = Color(0xFF64748B)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
 
                     OutlinedTextField(
                         value = currentPassword,
@@ -6433,7 +6310,7 @@ fun SecurityScreen(
                         }
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     OutlinedTextField(
                         value = newPassword,
@@ -6453,7 +6330,7 @@ fun SecurityScreen(
                         }
                     )
 
-                    if (newPassword.isNotEmpty()) {
+                    if (!isDemoAccount && newPassword.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(6.dp))
                         LinearProgressIndicator(
                             progress = { passwordStrength },
@@ -6466,14 +6343,30 @@ fun SecurityScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Độ mạnh: $strengthLabel",
+                            text = "Độ an toàn: $strengthLabel",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = strengthColor
                         )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFFF8FAFC))
+                                .padding(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            PasswordCriteriaRow(text = "Tối thiểu 8 ký tự", met = hasMinLength)
+                            PasswordCriteriaRow(text = "Chữ in hoa (A-Z)", met = hasUppercase)
+                            PasswordCriteriaRow(text = "Chữ thường (a-z)", met = hasLowercase)
+                            PasswordCriteriaRow(text = "Chữ số (0-9)", met = hasDigit)
+                            PasswordCriteriaRow(text = "Ký tự đặc biệt (!@#$%...)", met = hasSpecial)
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     OutlinedTextField(
                         value = confirmPassword,
@@ -6481,12 +6374,21 @@ fun SecurityScreen(
                         label = { Text("Xác nhận mật khẩu mới") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        visualTransformation = PasswordVisualTransformation()
+                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = null,
+                                    tint = Color(0xFF94A3B8)
+                                )
+                            }
+                        }
                     )
 
                     passwordChangeError?.let { err ->
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(err, color = Color(0xFFDC2626), fontSize = 12.sp)
+                        Text(err, color = Color(0xFFDC2626), fontSize = 12.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             },
@@ -6495,8 +6397,10 @@ fun SecurityScreen(
                     onClick = {
                         if (currentPassword.isBlank()) {
                             passwordChangeError = "Vui lòng nhập mật khẩu hiện tại"
-                        } else if (newPassword.length < 6) {
-                            passwordChangeError = "Mật khẩu mới phải có ít nhất 6 ký tự"
+                        } else if (!isDemoAccount && !isPasswordStrictValid) {
+                            passwordChangeError = "Mật khẩu mới chưa đủ điều kiện: Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+                        } else if (newPassword.isBlank()) {
+                            passwordChangeError = "Vui lòng nhập mật khẩu mới"
                         } else if (newPassword != confirmPassword) {
                             passwordChangeError = "Mật khẩu xác nhận không trùng khớp"
                         } else {
@@ -6519,73 +6423,221 @@ fun SecurityScreen(
         )
     }
 
-    // ================= BACKUP CODES DIALOG =================
-    if (showBackupCodesDialog) {
+    // ================= AUTHENTICATOR SETUP DIALOG =================
+    if (showAuthenticatorSetupDialog) {
         AlertDialog(
-            onDismissRequest = { showBackupCodesDialog = false },
+            onDismissRequest = { showAuthenticatorSetupDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Key, contentDescription = null, tint = Color(0xFF1D4ED8))
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEFF6FF)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LockReset,
+                            contentDescription = null,
+                            tint = Color(0xFF1D4ED8),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Mã dự phòng 2FA", fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                    Text("Xác thực 2 bước (Authenticator)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             },
             text = {
                 Column {
                     Text(
-                        "Lưu các mã này ở nơi an toàn. Mỗi mã chỉ có thể sử dụng 1 lần khi không nhận được OTP:",
+                        "1. Mở ứng dụng Google Authenticator hoặc Microsoft Authenticator trên điện thoại.",
                         fontSize = 12.sp,
-                        color = Color(0xFF64748B)
+                        color = Color(0xFF334155),
+                        lineHeight = 16.sp
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    val codes = listOf(
-                        "8492 - 1048", "3957 - 8201",
-                        "4819 - 9923", "7103 - 4820",
-                        "2048 - 6192", "9910 - 3847",
-                        "1284 - 5509", "6732 - 1109"
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "2. Thêm khóa bảo mật tài khoản bên dưới:",
+                        fontSize = 12.sp,
+                        color = Color(0xFF334155)
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFF1F5F9))
-                            .padding(12.dp)
+                    val secretKey = "CRM-TOTP-8892-XQ71"
+                    Surface(
+                        color = Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        codes.chunked(2).forEach { rowCodes ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = secretKey,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Color(0xFF0F172A),
+                                letterSpacing = 1.sp
+                            )
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("📋 Đã sao chép khóa bảo mật Authenticator!")
+                                    }
+                                },
+                                modifier = Modifier.size(28.dp)
                             ) {
-                                Text(rowCodes[0], fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
-                                if (rowCodes.size > 1) {
-                                    Text(rowCodes[1], fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy",
+                                    tint = Color(0xFF1D4ED8),
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        "3. Nhập mã OTP 6 chữ số từ ứng dụng Authenticator để kích hoạt:",
+                        fontSize = 12.sp,
+                        color = Color(0xFF334155)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    OutlinedTextField(
+                        value = authOtpCode,
+                        onValueChange = { if (it.length <= 6 && it.all { char -> char.isDigit() }) authOtpCode = it },
+                        placeholder = { Text("Nhập 6 chữ số OTP") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                    authOtpError?.let { err ->
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(err, color = Color(0xFFDC2626), fontSize = 11.sp)
                     }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        showBackupCodesDialog = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar("📋 Đã sao chép danh sách 8 mã dự phòng!")
+                        if (authOtpCode.length != 6) {
+                            authOtpError = "Vui lòng nhập đủ 6 chữ số từ ứng dụng Authenticator"
+                        } else {
+                            viewModel.updateSecuritySettings(secSettings.copy(twoFactorAuth = true))
+                            showAuthenticatorSetupDialog = false
+                            scope.launch {
+                                snackbarHostState.showSnackbar("🎉 Đã bật xác thực qua Google Authenticator thành công!")
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary)
                 ) {
-                    Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Sao chép mã")
+                    Text("Xác nhận kích hoạt")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showBackupCodesDialog = false }) {
-                    Text("Đóng", color = Color(0xFF64748B))
+                TextButton(onClick = { showAuthenticatorSetupDialog = false }) {
+                    Text("Hủy", color = Color(0xFF64748B))
+                }
+            }
+        )
+    }
+
+    // ================= REAL DELETE ACCOUNT DIALOG =================
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEE2E2)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.WarningAmber,
+                        contentDescription = null,
+                        tint = Color(0xFFDC2626),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Xác nhận xóa tài khoản?",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = Color(0xFF991B1B)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Lưu ý quan trọng: Hành động này có hiệu lực thực thi ngay lập tức và KHÔNG THỂ HOÀN TÁC.",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = Color(0xFF991B1B)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Toàn bộ thông tin tài khoản (${userProfile.email.ifBlank { "Tài khoản hiện tại" }}), thiết lập bảo mật và dữ liệu cá nhân cục bộ sẽ bị xóa hoàn toàn khỏi thiết bị.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF475569),
+                        lineHeight = 16.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Nhập \"XOA\" hoặc \"DELETE\" bên dưới để xác nhận:",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = deleteConfirmationInput,
+                        onValueChange = { deleteConfirmationInput = it },
+                        placeholder = { Text("Nhập XOA để xác nhận") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    deleteError?.let { err ->
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(err, color = Color(0xFFDC2626), fontSize = 11.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val input = deleteConfirmationInput.trim().uppercase()
+                        if (input != "XOA" && input != "DELETE") {
+                            deleteError = "Vui lòng nhập đúng \"XOA\" hoặc \"DELETE\" để xác nhận."
+                        } else {
+                            showDeleteAccountDialog = false
+                            // Real execution: wipe account from storage and reset session
+                            viewModel.deleteAccount(userProfile.email)
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Đã thực thi xóa tài khoản và dữ liệu thành công.")
+                            }
+                            onBack()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                ) {
+                    Text("Xóa tài khoản vĩnh viễn", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountDialog = false }) {
+                    Text("Hủy", color = Color(0xFF64748B))
                 }
             }
         )
@@ -6616,6 +6668,25 @@ fun SecurityScreen(
                     Text("Hủy", color = Color(0xFF64748B))
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun PasswordCriteriaRow(text: String, met: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = if (met) Icons.Default.CheckCircle else Icons.Default.Close,
+            contentDescription = null,
+            tint = if (met) Color(0xFF10B981) else Color(0xFF94A3B8),
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = text,
+            fontSize = 11.sp,
+            color = if (met) Color(0xFF047857) else Color(0xFF64748B),
+            fontWeight = if (met) FontWeight.SemiBold else FontWeight.Normal
         )
     }
 }
