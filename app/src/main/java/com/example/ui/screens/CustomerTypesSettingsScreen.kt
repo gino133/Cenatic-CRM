@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
+import com.example.data.model.AccountTier
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,12 +27,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -99,8 +104,10 @@ fun parseHexColor(hex: String, defaultColor: Color = Color(0xFF2563EB)): Color {
 @Composable
 fun CustomerTypesSettingsScreen(
     viewModel: CrmViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToUpgrade: (() -> Unit)? = null
 ) {
+    val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
     val customerTypes by viewModel.allCustomerTypes.collectAsStateWithLifecycle()
     val allCustomers by viewModel.allRawCustomers.collectAsStateWithLifecycle()
 
@@ -108,6 +115,171 @@ fun CustomerTypesSettingsScreen(
     var editingType by remember { mutableStateOf<CustomerTypeEntity?>(null) }
     var typeToDelete by remember { mutableStateOf<CustomerTypeEntity?>(null) }
     var showResetConfirmDialog by remember { mutableStateOf(false) }
+
+    if (userProfile.accountTier == com.example.data.model.AccountTier.FREE) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Phân loại khách hàng", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFFEF3C7)) {
+                                    Text("VIP", color = Color(0xFFD97706), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                }
+                            }
+                            Text("Tùy chỉnh nhóm & phân hạng khách hàng", fontSize = 12.sp, color = Color(0xFF64748B))
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                )
+            },
+            containerColor = Color(0xFFF8FAFC)
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Tính năng Gói VIP Cá nhân",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0F172A)
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "Tính năng \"Phân loại khách hàng\" nâng cao yêu cầu tài khoản VIP hoặc Doanh nghiệp. Sau khi nâng cấp, toàn bộ danh mục phân loại sẽ tự động kích hoạt.",
+                    fontSize = 13.5.sp,
+                    color = Color(0xFF64748B),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    shadowElevation = 1.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Quyền lợi khi kích hoạt gói VIP:",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp,
+                            color = Color(0xFF1E293B)
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        val points = listOf(
+                            "Tùy biến không giới hạn các nhóm khách hàng và màu sắc nhận diện",
+                            "Tự động đồng bộ phân loại vào Danh bạ và Phễu bán hàng",
+                            "Lọc khách hàng tiềm năng VIP / Doanh nghiệp theo phân loại",
+                            "Thống kê doanh số theo từng nhóm đối tượng khách hàng"
+                        )
+                        points.forEach { point ->
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                modifier = Modifier.padding(vertical = 3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = Color(0xFFD97706),
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .padding(top = 2.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = point,
+                                    fontSize = 12.5.sp,
+                                    color = Color(0xFF334155),
+                                    lineHeight = 17.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Nút 1: Đăng ký sử dụng (Kích hoạt trực tiếp)
+                Button(
+                    onClick = { viewModel.setAccountTier(AccountTier.VIP) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("ĐĂNG KÝ SỬ DỤNG GÓI VIP", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Nút 2: Xem gói
+                OutlinedButton(
+                    onClick = { onNavigateToUpgrade?.invoke() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD97706)),
+                    border = BorderStroke(1.dp, Color(0xFFD97706))
+                ) {
+                    Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("XEM CHI TIẾT GÓI VIP", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Quay lại Cài đặt", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+        return
+    }
 
     Scaffold(
         topBar = {

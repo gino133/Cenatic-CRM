@@ -676,13 +676,18 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
         setAccountTier(nextTier)
     }
 
-    fun resetToComprehensiveSeedData() {
+    fun resetToComprehensiveSeedData(onComplete: (() -> Unit)? = null) {
         viewModelScope.launch {
-            repository.resetToComprehensiveSeedData()
-            _quotes.value = CrmSeedData.getSampleQuotes()
-            _projects.value = CrmSeedData.getSampleProjects()
-            _employees.value = CrmSeedData.getSampleEmployees()
-            _attendanceRecords.value = CrmSeedData.getSampleAttendance()
+            try {
+                repository.resetToComprehensiveSeedData()
+                _quotes.value = CrmSeedData.getSampleQuotes()
+                _projects.value = CrmSeedData.getSampleProjects()
+                _employees.value = CrmSeedData.getSampleEmployees()
+                _attendanceRecords.value = CrmSeedData.getSampleAttendance()
+                _payrollPolicy.value = PayrollPolicySettings()
+            } finally {
+                onComplete?.invoke()
+            }
         }
     }
 

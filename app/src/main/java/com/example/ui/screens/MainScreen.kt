@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import com.example.data.model.AccountTier
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -132,6 +133,7 @@ fun MainScreen(viewModel: CrmViewModel) {
     var currentNavIndex by remember { mutableIntStateOf(0) }
     var fullScreenMode by remember { mutableStateOf(FullScreenMode.NONE) }
     var quotesInitialTab by remember { mutableIntStateOf(0) }
+    var upgradeTargetTier by remember { mutableStateOf(AccountTier.VIP) }
 
     val selectedCustomerId by viewModel.selectedCustomerId.collectAsStateWithLifecycle()
     val allCustomers by viewModel.allRawCustomers.collectAsStateWithLifecycle()
@@ -285,6 +287,10 @@ fun MainScreen(viewModel: CrmViewModel) {
                 },
                 onOpenProfile = {
                     fullScreenMode = FullScreenMode.EDIT_PROFILE
+                },
+                onNavigateToUpgrade = {
+                    upgradeTargetTier = AccountTier.BUSINESS
+                    fullScreenMode = FullScreenMode.UPGRADE
                 }
             )
             return
@@ -293,7 +299,10 @@ fun MainScreen(viewModel: CrmViewModel) {
             AccountOverviewScreen(
                 viewModel = viewModel,
                 onBack = { fullScreenMode = FullScreenMode.NONE },
-                onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE }
+                onNavigateToUpgrade = {
+                    upgradeTargetTier = AccountTier.VIP
+                    fullScreenMode = FullScreenMode.UPGRADE
+                }
             )
             return
         }
@@ -341,7 +350,11 @@ fun MainScreen(viewModel: CrmViewModel) {
         FullScreenMode.CUSTOMER_TYPES -> {
             CustomerTypesSettingsScreen(
                 viewModel = viewModel,
-                onBack = { fullScreenMode = FullScreenMode.NONE }
+                onBack = { fullScreenMode = FullScreenMode.NONE },
+                onNavigateToUpgrade = {
+                    upgradeTargetTier = AccountTier.VIP
+                    fullScreenMode = FullScreenMode.UPGRADE
+                }
             )
             return
         }
@@ -362,6 +375,7 @@ fun MainScreen(viewModel: CrmViewModel) {
         FullScreenMode.UPGRADE -> {
             UpgradeAccountScreen(
                 viewModel = viewModel,
+                initialTier = upgradeTargetTier,
                 onBack = { fullScreenMode = FullScreenMode.NONE }
             )
             return
@@ -388,7 +402,10 @@ fun MainScreen(viewModel: CrmViewModel) {
                 FreeRevenueScreen(
                     viewModel = viewModel,
                     onBack = { fullScreenMode = FullScreenMode.NONE },
-                    onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE }
+                    onNavigateToUpgrade = {
+                        upgradeTargetTier = AccountTier.VIP
+                        fullScreenMode = FullScreenMode.UPGRADE
+                    }
                 )
             } else {
                 VipRevenueScreen(
@@ -410,7 +427,10 @@ fun MainScreen(viewModel: CrmViewModel) {
             UnifiedPerformanceKpiScreen(
                 viewModel = viewModel,
                 onBack = { fullScreenMode = FullScreenMode.NONE },
-                onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE },
+                onNavigateToUpgrade = { tier ->
+                    upgradeTargetTier = tier
+                    fullScreenMode = FullScreenMode.UPGRADE
+                },
                 onNavigateToPayroll = { fullScreenMode = FullScreenMode.PAYROLL }
             )
             return
@@ -712,7 +732,10 @@ fun MainScreen(viewModel: CrmViewModel) {
                             onNavigateToNotifications = { fullScreenMode = FullScreenMode.NOTIFICATIONS },
                             onNavigateToSecurity = { fullScreenMode = FullScreenMode.SECURITY },
                             onNavigateToBackupSync = { fullScreenMode = FullScreenMode.BACKUP_SYNC },
-                            onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE },
+                            onNavigateToUpgrade = { tier ->
+                                upgradeTargetTier = tier
+                                fullScreenMode = FullScreenMode.UPGRADE
+                            },
                             onNavigateToReports = { fullScreenMode = FullScreenMode.REPORTS },
                             onNavigateToOverview = { fullScreenMode = FullScreenMode.KPI_PERFORMANCE },
                             onLogout = { viewModel.logout() }

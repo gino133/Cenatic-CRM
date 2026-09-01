@@ -228,9 +228,10 @@ fun SecuritySettingsScreen(
 @Composable
 fun UpgradeAccountScreen(
     viewModel: CrmViewModel,
+    initialTier: AccountTier = AccountTier.VIP,
     onBack: () -> Unit
 ) {
-    VipUpgradeScreen(viewModel = viewModel, onBack = onBack)
+    VipUpgradeScreen(viewModel = viewModel, initialTier = initialTier, onBack = onBack)
 }
 
 enum class SettingsSubScreen {
@@ -259,7 +260,7 @@ fun SettingsHubScreen(
     onNavigateToNotifications: () -> Unit,
     onNavigateToSecurity: () -> Unit,
     onNavigateToBackupSync: () -> Unit = {},
-    onNavigateToUpgrade: () -> Unit,
+    onNavigateToUpgrade: (AccountTier) -> Unit = {},
     onNavigateToReports: () -> Unit,
     onNavigateToOverview: () -> Unit,
     onLogout: () -> Unit
@@ -389,7 +390,7 @@ fun SettingsHubScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onNavigateToUpgrade() },
+                .clickable { onNavigateToUpgrade(AccountTier.VIP) },
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
@@ -434,7 +435,7 @@ fun SettingsHubScreen(
                         )
                     }
                     Button(
-                        onClick = onNavigateToUpgrade,
+                        onClick = { onNavigateToUpgrade(AccountTier.VIP) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.White,
                             contentColor = ProfessionalPrimary
@@ -485,11 +486,15 @@ fun SettingsHubScreen(
                     icon = Icons.Default.Star,
                     title = "Phân loại khách hàng",
                     subtitle = "Tùy chỉnh nhóm, phân hạng khách hàng chuyên sâu",
-                    badge = "VIP",
-                    badgeBg = Color(0xFFFEF3C7),
-                    badgeColor = Color(0xFFD97706),
+                    badge = if (userProfile.accountTier == AccountTier.FREE) "VIP (Khóa)" else "VIP ✓",
+                    badgeBg = if (userProfile.accountTier == AccountTier.FREE) Color(0xFFF1F5F9) else Color(0xFFFEF3C7),
+                    badgeColor = if (userProfile.accountTier == AccountTier.FREE) Color(0xFF64748B) else Color(0xFFD97706),
                     onClick = {
-                        showVipUpgradeDialog = "Phân loại khách hàng (VIP)"
+                        if (userProfile.accountTier == AccountTier.FREE) {
+                            showVipUpgradeDialog = "Phân loại khách hàng (VIP)"
+                        } else {
+                            onNavigateToCustomerTypes()
+                        }
                     }
                 )
                 HorizontalDivider(color = Color(0xFFF1F5F9))
@@ -499,11 +504,15 @@ fun SettingsHubScreen(
                     icon = Icons.Default.SupervisorAccount,
                     title = "Quản lý nhân sự",
                     subtitle = "Nhân sự, chấm công, bảng lương & thâm niên",
-                    badge = "BUSINESS",
-                    badgeBg = Color(0xFFEDE9FE),
-                    badgeColor = Color(0xFF7C3AED),
+                    badge = if (userProfile.accountTier != AccountTier.BUSINESS) "BUSINESS (Khóa)" else "BUSINESS ✓",
+                    badgeBg = if (userProfile.accountTier != AccountTier.BUSINESS) Color(0xFFF1F5F9) else Color(0xFFEDE9FE),
+                    badgeColor = if (userProfile.accountTier != AccountTier.BUSINESS) Color(0xFF64748B) else Color(0xFF7C3AED),
                     onClick = {
-                        showBusinessUpgradeDialog = "Quản lý nhân sự (BUSINESS)"
+                        if (userProfile.accountTier != AccountTier.BUSINESS) {
+                            showBusinessUpgradeDialog = "Quản lý nhân sự (BUSINESS)"
+                        } else {
+                            onNavigateToEmployees()
+                        }
                     }
                 )
                 HorizontalDivider(color = Color(0xFFF1F5F9))
@@ -513,11 +522,15 @@ fun SettingsHubScreen(
                     icon = Icons.Default.TrendingUp,
                     title = "Báo cáo thống kê",
                     subtitle = "Doanh thu, tỷ lệ chốt deal và phân tích tăng trưởng",
-                    badge = "BUSINESS",
-                    badgeBg = Color(0xFFEDE9FE),
-                    badgeColor = Color(0xFF7C3AED),
+                    badge = if (userProfile.accountTier != AccountTier.BUSINESS) "BUSINESS (Khóa)" else "BUSINESS ✓",
+                    badgeBg = if (userProfile.accountTier != AccountTier.BUSINESS) Color(0xFFF1F5F9) else Color(0xFFEDE9FE),
+                    badgeColor = if (userProfile.accountTier != AccountTier.BUSINESS) Color(0xFF64748B) else Color(0xFF7C3AED),
                     onClick = {
-                        showBusinessUpgradeDialog = "Báo cáo thống kê (BUSINESS)"
+                        if (userProfile.accountTier != AccountTier.BUSINESS) {
+                            showBusinessUpgradeDialog = "Báo cáo thống kê (BUSINESS)"
+                        } else {
+                            onNavigateToReports()
+                        }
                     }
                 )
             }
@@ -619,7 +632,7 @@ fun SettingsHubScreen(
             text = {
                 Column {
                     Text(
-                        text = "Mục \"$featureName\" thuộc gói VIP dành cho cá nhân chuyên nghiệp.",
+                        text = "Mục \"$featureName\" thuộc gói VIP dành cho cá nhân chuyên nghiệp. Bạn cần nâng cấp gói để sử dụng tính năng này.",
                         fontSize = 13.sp,
                         color = Color(0xFF475569),
                         lineHeight = 18.sp
@@ -633,14 +646,14 @@ fun SettingsHubScreen(
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
-                                text = "✨ Đăng ký dùng thử MIỄN PHÍ:",
+                                text = "✨ Quyền lợi gói VIP:",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 color = Color(0xFFB45309)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Hiện tại trong giai đoạn trải nghiệm, bạn chỉ cần bấm \"Đăng ký sử dụng\" là có thể trải nghiệm ngay tính năng này!",
+                                text = "Tự động kích hoạt phân loại khách hàng, AI dự báo doanh thu, tốc độ chốt deal & đặt mục tiêu đa chiều.",
                                 fontSize = 12.sp,
                                 color = Color(0xFF92400E)
                             )
@@ -649,30 +662,42 @@ fun SettingsHubScreen(
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        showVipUpgradeDialog = null
-                        onNavigateToCustomerTypes()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
-                    shape = RoundedCornerShape(8.dp)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Đăng ký sử dụng", fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = {
+                            viewModel.setAccountTier(AccountTier.VIP)
+                            showVipUpgradeDialog = null
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Đăng ký sử dụng gói VIP", fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            showVipUpgradeDialog = null
+                            onNavigateToUpgrade(AccountTier.VIP)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD97706)),
+                        border = BorderStroke(1.dp, Color(0xFFD97706))
+                    ) {
+                        Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Xem gói VIP", fontWeight = FontWeight.Bold)
+                    }
                 }
             },
             dismissButton = {
-                Row {
-                    TextButton(onClick = {
-                        showVipUpgradeDialog = null
-                        onNavigateToUpgrade()
-                    }) {
-                        Text("Xem gói VIP", color = ProfessionalPrimary)
-                    }
-                    TextButton(onClick = { showVipUpgradeDialog = null }) {
-                        Text("Đóng", color = Color(0xFF64748B))
-                    }
+                TextButton(onClick = { showVipUpgradeDialog = null }) {
+                    Text("Đóng", color = Color(0xFF64748B))
                 }
             }
         )
@@ -723,14 +748,14 @@ fun SettingsHubScreen(
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
-                                text = "🏢 Đăng ký kích hoạt ngay:",
+                                text = "🏢 Quyền lợi gói BUSINESS:",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 color = Color(0xFF6D28D9)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Tính năng này sẽ được tính phí khi phát hành chính thức. Tạm thời bạn có thể bấm \"Đăng ký sử dụng\" để mở khóa và trải nghiệm ngay!",
+                                text = "Tự động kích hoạt toàn bộ quản lý nhân sự, bảng lương thâm niên, báo cáo thống kê chuyên sâu & đánh giá KPIs nhân sự.",
                                 fontSize = 12.sp,
                                 color = Color(0xFF5B21B6)
                             )
@@ -739,35 +764,42 @@ fun SettingsHubScreen(
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        val target = showBusinessUpgradeDialog
-                        showBusinessUpgradeDialog = null
-                        if (target?.contains("nhân sự") == true) {
-                            onNavigateToEmployees()
-                        } else {
-                            onNavigateToReports()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
-                    shape = RoundedCornerShape(8.dp)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Đăng ký sử dụng", fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = {
+                            viewModel.setAccountTier(AccountTier.BUSINESS)
+                            showBusinessUpgradeDialog = null
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Đăng ký sử dụng gói BUSINESS", fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            showBusinessUpgradeDialog = null
+                            onNavigateToUpgrade(AccountTier.BUSINESS)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF7C3AED)),
+                        border = BorderStroke(1.dp, Color(0xFF7C3AED))
+                    ) {
+                        Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Xem gói BUSINESS", fontWeight = FontWeight.Bold)
+                    }
                 }
             },
             dismissButton = {
-                Row {
-                    TextButton(onClick = {
-                        showBusinessUpgradeDialog = null
-                        onNavigateToUpgrade()
-                    }) {
-                        Text("Xem gói", color = ProfessionalPrimary)
-                    }
-                    TextButton(onClick = { showBusinessUpgradeDialog = null }) {
-                        Text("Đóng", color = Color(0xFF64748B))
-                    }
+                TextButton(onClick = { showBusinessUpgradeDialog = null }) {
+                    Text("Đóng", color = Color(0xFF64748B))
                 }
             }
         )
@@ -777,14 +809,21 @@ fun SettingsHubScreen(
 @Composable
 fun SettingsMainHost(
     viewModel: CrmViewModel,
-    onBackToHome: () -> Unit
+    onBackToHome: () -> Unit,
+    onNavigateToUpgrade: ((AccountTier) -> Unit)? = null
 ) {
     var currentSubScreen by remember { mutableStateOf(SettingsSubScreen.MAIN) }
+    var upgradeTargetTier by remember { mutableStateOf(AccountTier.VIP) }
+    val upgradeAction: (AccountTier) -> Unit = onNavigateToUpgrade ?: { tier ->
+        upgradeTargetTier = tier
+        currentSubScreen = SettingsSubScreen.VIP_UPGRADE
+    }
 
     when (currentSubScreen) {
         SettingsSubScreen.MAIN -> AccountSettingsScreen(
             viewModel = viewModel,
-            onNavigate = { currentSubScreen = it },
+            onNavigateToEditProfile = { currentSubScreen = SettingsSubScreen.PROFILE_EDIT },
+            onNavigateToSecurity = { currentSubScreen = SettingsSubScreen.SECURITY },
             onBack = onBackToHome
         )
         SettingsSubScreen.PROFILE_EDIT -> ProfileEditScreen(
@@ -793,11 +832,13 @@ fun SettingsMainHost(
         )
         SettingsSubScreen.EMPLOYEES -> EmployeeManagementScreen(
             viewModel = viewModel,
-            onBack = { currentSubScreen = SettingsSubScreen.MAIN }
+            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+            onNavigateToUpgrade = { upgradeAction(AccountTier.BUSINESS) }
         )
         SettingsSubScreen.CUSTOMER_TYPES -> CustomerTypesSettingsScreen(
             viewModel = viewModel,
-            onBack = { currentSubScreen = SettingsSubScreen.MAIN }
+            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+            onNavigateToUpgrade = { upgradeAction(AccountTier.VIP) }
         )
         SettingsSubScreen.NOTIFICATIONS -> NotificationSettingsScreen(
             viewModel = viewModel,
@@ -818,6 +859,8 @@ fun SettingsMainHost(
             onBack = { currentSubScreen = SettingsSubScreen.MAIN }
         )
         SettingsSubScreen.VIP_UPGRADE -> VipUpgradeScreen(
+            viewModel = viewModel,
+            initialTier = upgradeTargetTier,
             onBack = { currentSubScreen = SettingsSubScreen.MAIN }
         )
     }
@@ -1980,11 +2023,13 @@ fun EmployeeManagementScreen(
     onBack: () -> Unit,
     onNavigateToTimekeeping: () -> Unit = {},
     onNavigateToPayroll: () -> Unit = {},
-    onNavigateToSenioritySettings: () -> Unit = {}
+    onNavigateToSenioritySettings: () -> Unit = {},
+    onNavigateToUpgrade: () -> Unit = {}
 ) {
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
     val employees by viewModel.employees.collectAsStateWithLifecycle()
     val payrollPolicy by viewModel.payrollPolicy.collectAsStateWithLifecycle()
+    val isBusinessUnlocked = userProfile.accountTier == com.example.data.model.AccountTier.BUSINESS
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatusFilter by remember { mutableStateOf("Tất cả") }
@@ -2012,16 +2057,16 @@ fun EmployeeManagementScreen(
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Quản lý nhân viên", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        if (userProfile.isVip) {
+                        Text("Quản lý nhân sự", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        if (isBusinessUnlocked) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFFFEF3C7)
+                                color = Color(0xFFEDE9FE)
                             ) {
                                 Text(
-                                    text = "VIP ACTIVE",
-                                    color = Color(0xFFD97706),
+                                    text = "BUSINESS ACTIVE",
+                                    color = Color(0xFF7C3AED),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 10.sp,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -2036,7 +2081,7 @@ fun EmployeeManagementScreen(
                     }
                 },
                 actions = {
-                    if (userProfile.isVip) {
+                    if (isBusinessUnlocked) {
                         IconButton(onClick = onNavigateToTimekeeping) {
                             Icon(imageVector = Icons.Default.AccessTime, contentDescription = "Chấm công", tint = ProfessionalPrimary)
                         }
@@ -2049,7 +2094,7 @@ fun EmployeeManagementScreen(
             )
         },
         floatingActionButton = {
-            if (userProfile.isVip) {
+            if (isBusinessUnlocked) {
                 FloatingActionButton(
                     onClick = {
                         employeeToEdit = null
@@ -2065,8 +2110,8 @@ fun EmployeeManagementScreen(
         },
         containerColor = Color(0xFFF5F7FB)
     ) { padding ->
-        if (!userProfile.isVip) {
-            // VIP Activation Screen
+        if (!isBusinessUnlocked) {
+            // Business Activation Screen
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -2079,13 +2124,13 @@ fun EmployeeManagementScreen(
                     modifier = Modifier
                         .size(72.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFFEF3C7)),
+                        .background(Color(0xFFEDE9FE)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "VIP",
-                        tint = Color(0xFFD97706),
+                        imageVector = Icons.Default.Apartment,
+                        contentDescription = "BUSINESS",
+                        tint = Color(0xFF7C3AED),
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -2094,11 +2139,11 @@ fun EmployeeManagementScreen(
 
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFFFEF3C7)
+                    color = Color(0xFFEDE9FE)
                 ) {
                     Text(
-                        text = "👑 TÍNH NĂNG TÀI KHOẢN VIP",
-                        color = Color(0xFFB45309),
+                        text = "🏢 TÍNH NĂNG TÀI KHOẢN BUSINESS",
+                        color = Color(0xFF6D28D9),
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
@@ -2118,7 +2163,7 @@ fun EmployeeManagementScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Phần quản lý nhân viên, chấm công chuẩn 8h/26 ngày, tăng ca OT và tự động tính thâm niên chỉ được kích hoạt trong tài khoản VIP.",
+                    text = "Phần quản lý nhân viên, chấm công chuẩn 8h/26 ngày, tăng ca OT và tự động tính thâm niên sẽ tự động kích hoạt sau khi nâng cấp gói BUSINESS.",
                     fontSize = 14.sp,
                     color = Color(0xFF64748B),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -2156,31 +2201,59 @@ fun EmployeeManagementScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Nút 1: Đăng ký sử dụng (Kích hoạt trực tiếp)
                 Button(
-                    onClick = {
-                        viewModel.setVipStatus(true)
-                    },
+                    onClick = { viewModel.setAccountTier(AccountTier.BUSINESS) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFD97706)
+                        containerColor = Color(0xFF7C3AED)
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Star,
+                        imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Kích hoạt tài khoản VIP",
+                        text = "ĐĂNG KÝ SỬ DỤNG GÓI BUSINESS",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         color = Color.White
                     )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Nút 2: Xem gói
+                OutlinedButton(
+                    onClick = onNavigateToUpgrade,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF7C3AED)),
+                    border = BorderStroke(1.dp, Color(0xFF7C3AED))
+                ) {
+                    Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("XEM CHI TIẾT GÓI BUSINESS", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Quay lại Cài đặt", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold)
                 }
             }
         } else {
@@ -7031,12 +7104,13 @@ fun BackupAndSyncScreen(
 @Composable
 fun VipUpgradeScreen(
     viewModel: CrmViewModel? = null,
+    initialTier: AccountTier = AccountTier.VIP,
     onBack: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedTierTab by remember { mutableStateOf(0) } // 0: Gói VIP Cá nhân, 1: Gói BUSINESS Doanh nghiệp
+    var selectedTierTab by remember(initialTier) { mutableIntStateOf(if (initialTier == AccountTier.BUSINESS) 1 else 0) } // 0: Gói VIP Cá nhân, 1: Gói BUSINESS Doanh nghiệp
     var selectedPlan by remember { mutableStateOf(1) } // 0: Tháng, 1: Năm
     var showTrialSuccessDialog by remember { mutableStateOf(false) }
 

@@ -118,7 +118,7 @@ import java.util.Locale
 fun FreeRevenueScreen(
     viewModel: CrmViewModel,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit
+    onNavigateToUpgrade: (AccountTier) -> Unit = {}
 ) {
     val deals by viewModel.dealsWithCustomer.collectAsStateWithLifecycle()
     val wonDeals = deals.filter { it.deal.stage.equals("WON", true) }
@@ -419,7 +419,7 @@ fun FreeRevenueScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onNavigateToUpgrade() },
+                        .clickable { onNavigateToUpgrade(AccountTier.VIP) },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFFFFFBEB)
@@ -1010,7 +1010,7 @@ data class KpiFeatureItem(
 fun UnifiedPerformanceKpiScreen(
     viewModel: CrmViewModel,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit,
+    onNavigateToUpgrade: (AccountTier) -> Unit = {},
     onNavigateToPayroll: () -> Unit = {}
 ) {
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -1018,6 +1018,7 @@ fun UnifiedPerformanceKpiScreen(
 
     // State lưu trang chi tiết đang được mở từ các khối vuông
     var activeDetailScreen by remember { mutableStateOf<KpiFeatureDetail?>(null) }
+    var showLockedFeatureDialog by remember { mutableStateOf<KpiFeatureItem?>(null) }
 
     // Nếu đang mở 1 trang chi tiết con:
     if (activeDetailScreen != null) {
@@ -1722,18 +1723,30 @@ fun UnifiedPerformanceKpiScreen(
                         Card(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(165.dp)
+                                .height(168.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .clickable {
-                                    activeDetailScreen = feature.detail
+                                    if (isLocked) {
+                                        showLockedFeatureDialog = feature
+                                    } else {
+                                        activeDetailScreen = feature.detail
+                                    }
                                 },
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isLocked) Color(0xFFFCFDFE) else Color.White
+                            ),
                             border = BorderStroke(
                                 1.dp,
-                                if (feature.tier == AccountTier.VIP) Color(0xFFFDE68A) else Color(0xFFDDD6FE)
+                                if (isLocked) {
+                                    Color(0xFFE2E8F0)
+                                } else if (feature.tier == AccountTier.VIP) {
+                                    Color(0xFFFDE68A)
+                                } else {
+                                    Color(0xFFDDD6FE)
+                                }
                             ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = if (isLocked) 0.5.dp else 2.dp)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -1751,13 +1764,13 @@ fun UnifiedPerformanceKpiScreen(
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(feature.lightBgColor),
+                                            .background(if (isLocked) Color(0xFFF1F5F9) else feature.lightBgColor),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
-                                            imageVector = feature.icon,
+                                            imageVector = if (isLocked) Icons.Default.Lock else feature.icon,
                                             contentDescription = null,
-                                            tint = feature.primaryColor,
+                                            tint = if (isLocked) Color(0xFF94A3B8) else feature.primaryColor,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -1765,15 +1778,30 @@ fun UnifiedPerformanceKpiScreen(
                                     // Nhãn dán loại tài khoản
                                     Surface(
                                         shape = RoundedCornerShape(4.dp),
-                                        color = if (feature.tier == AccountTier.VIP) Color(0xFFFEF3C7) else Color(0xFFEDE9FE)
+                                        color = if (isLocked) {
+                                            Color(0xFFF1F5F9)
+                                        } else if (feature.tier == AccountTier.VIP) {
+                                            Color(0xFFFEF3C7)
+                                        } else {
+                                            Color(0xFFEDE9FE)
+                                        }
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
+                                            if (isLocked) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Lock,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFF64748B),
+                                                    modifier = Modifier.size(10.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(3.dp))
+                                            }
                                             Text(
-                                                text = feature.tier.name,
-                                                color = if (feature.tier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED),
+                                                text = if (isLocked) "${feature.tier.name} (Khóa)" else "${feature.tier.name} ✓",
+                                                color = if (isLocked) Color(0xFF64748B) else if (feature.tier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED),
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 9.5.sp
                                             )
@@ -1787,7 +1815,7 @@ fun UnifiedPerformanceKpiScreen(
                                         text = feature.title,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.5.sp,
-                                        color = Color(0xFF0F172A),
+                                        color = if (isLocked) Color(0xFF475569) else Color(0xFF0F172A),
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -1795,7 +1823,7 @@ fun UnifiedPerformanceKpiScreen(
                                     Text(
                                         text = feature.description,
                                         fontSize = 10.5.sp,
-                                        color = Color(0xFF64748B),
+                                        color = if (isLocked) Color(0xFF94A3B8) else Color(0xFF64748B),
                                         lineHeight = 13.5.sp,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -1809,15 +1837,15 @@ fun UnifiedPerformanceKpiScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Xem chi tiết",
+                                        text = if (isLocked) "Chưa kích hoạt" else "Xem chi tiết",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = feature.primaryColor
+                                        color = if (isLocked) Color(0xFF94A3B8) else feature.primaryColor
                                     )
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                        imageVector = if (isLocked) Icons.Default.Lock else Icons.AutoMirrored.Filled.ArrowForward,
                                         contentDescription = null,
-                                        tint = feature.primaryColor,
+                                        tint = if (isLocked) Color(0xFF94A3B8) else feature.primaryColor,
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -1835,10 +1863,11 @@ fun UnifiedPerformanceKpiScreen(
             // 5. BANNER NÂNG CẤP (NẾU ĐANG LÀ GÓI FREE HOẶC VIP CẦN LÊN BUSINESS)
             if (tier != AccountTier.BUSINESS) {
                 item {
+                    val targetUpgradeTier = if (tier == AccountTier.FREE) AccountTier.VIP else AccountTier.BUSINESS
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onNavigateToUpgrade() },
+                            .clickable { onNavigateToUpgrade(targetUpgradeTier) },
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
                         border = BorderStroke(1.dp, Color(0xFFFDE68A))
@@ -1887,12 +1916,330 @@ fun UnifiedPerformanceKpiScreen(
             }
         }
     }
+
+    // DIALOG THÔNG BÁO TÍNH NĂNG CHƯA KÍCH HOẠT VÀ ĐIỀU HƯỚNG MUA GÓI
+    showLockedFeatureDialog?.let { lockedFeature ->
+        AlertDialog(
+            onDismissRequest = { showLockedFeatureDialog = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(if (lockedFeature.tier == AccountTier.VIP) Color(0xFFFEF3C7) else Color(0xFFEDE9FE)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = if (lockedFeature.tier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Tính năng ${lockedFeature.title}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F172A)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Mục \"${lockedFeature.title}\" thuộc ${lockedFeature.tier.displayName}. Sau khi nâng cấp, tính năng này sẽ tự động kích hoạt kèm theo toàn bộ số liệu báo cáo chuyên sâu.",
+                        fontSize = 13.sp,
+                        color = Color(0xFF475569),
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        color = if (lockedFeature.tier == AccountTier.VIP) Color(0xFFFFFBEB) else Color(0xFFF5F3FF),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(
+                            1.dp,
+                            if (lockedFeature.tier == AccountTier.VIP) Color(0xFFFDE68A) else Color(0xFFDDD6FE)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "✨ Đăng ký sử dụng gói ${lockedFeature.tier.badge}:",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = if (lockedFeature.tier == AccountTier.VIP) Color(0xFFB45309) else Color(0xFF6D28D9)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Bấm \"Đăng ký sử dụng\" để kích hoạt ngay, hoặc bấm \"Xem gói\" để xem chi tiết quyền lợi và bảng giá.",
+                                fontSize = 12.sp,
+                                color = if (lockedFeature.tier == AccountTier.VIP) Color(0xFF92400E) else Color(0xFF5B21B6)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Nút 1: Đăng ký sử dụng (Kích hoạt ngay)
+                    Button(
+                        onClick = {
+                            viewModel.setAccountTier(lockedFeature.tier)
+                            showLockedFeatureDialog = null
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (lockedFeature.tier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Đăng ký sử dụng", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                    }
+
+                    // Nút 2: Xem gói (Chuyển sang trang xem gói tương ứng)
+                    OutlinedButton(
+                        onClick = {
+                            val tierToOpen = lockedFeature.tier
+                            showLockedFeatureDialog = null
+                            onNavigateToUpgrade(tierToOpen)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = if (lockedFeature.tier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED)
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (lockedFeature.tier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED)
+                        )
+                    ) {
+                        Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (lockedFeature.tier == AccountTier.VIP) "Xem gói VIP" else "Xem gói BUSINESS",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp
+                        )
+                    }
+
+                    // Nút 3: Đóng
+                    TextButton(
+                        onClick = { showLockedFeatureDialog = null },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Đóng", color = Color(0xFF64748B), fontSize = 13.sp)
+                    }
+                }
+            },
+            dismissButton = null
+        )
+    }
 }
 
 // =========================================================================
 // CÁC MÀN HÌNH CHI TIẾT RIÊNG BIỆT KHI BẤM VÀO TỪNG KHỐI VUÔNG
-// (Mỗi màn hình có nút QUAY LẠI để trở về trang Hiệu suất & KPIs)
+// (Mỗi màn hình có kiểm tra phân quyền & nút QUAY LẠI)
 // =========================================================================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LockedFeaturePaywallScreen(
+    title: String,
+    subtitle: String,
+    requiredTier: AccountTier,
+    description: String,
+    highlights: List<String>,
+    onBack: () -> Unit,
+    onNavigateToUpgrade: (AccountTier) -> Unit = {},
+    viewModel: CrmViewModel? = null,
+    onRegisterDirect: (() -> Unit)? = null
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = if (requiredTier == AccountTier.VIP) Color(0xFFFEF3C7) else Color(0xFFEDE9FE)
+                            ) {
+                                Text(
+                                    requiredTier.name,
+                                    color = if (requiredTier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                        Text(subtitle, fontSize = 12.sp, color = Color(0xFF64748B))
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        containerColor = Color(0xFFF8FAFC)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(if (requiredTier == AccountTier.VIP) Color(0xFFFEF3C7) else Color(0xFFEDE9FE)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = if (requiredTier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED),
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Tính năng chưa kích hoạt",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF0F172A)
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Tính năng \"$title\" yêu cầu ${requiredTier.displayName}. Sau khi nâng cấp, toàn bộ số liệu và bảng phân tích sẽ tự động kích hoạt.",
+                fontSize = 13.5.sp,
+                color = Color(0xFF64748B),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                lineHeight = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                shadowElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Quyền lợi khi kích hoạt gói ${requiredTier.badge}:",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp,
+                        color = Color(0xFF1E293B)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    highlights.forEach { point ->
+                        Row(
+                            verticalAlignment = Alignment.Top,
+                            modifier = Modifier.padding(vertical = 3.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = if (requiredTier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED),
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .padding(top = 2.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = point,
+                                fontSize = 12.5.sp,
+                                color = Color(0xFF334155),
+                                lineHeight = 17.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Nút 1: Đăng ký sử dụng (Kích hoạt ngay)
+            Button(
+                onClick = {
+                    if (viewModel != null) {
+                        viewModel.setAccountTier(requiredTier)
+                    } else {
+                        onRegisterDirect?.invoke()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (requiredTier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("ĐĂNG KÝ SỬ DỤNG GÓI ${requiredTier.badge}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Nút 2: Xem gói
+            OutlinedButton(
+                onClick = { onNavigateToUpgrade(requiredTier) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (requiredTier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED)
+                ),
+                border = BorderStroke(
+                    1.dp,
+                    if (requiredTier == AccountTier.VIP) Color(0xFFD97706) else Color(0xFF7C3AED)
+                )
+            ) {
+                Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("XEM CHI TIẾT GÓI ${requiredTier.badge}", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Nút 3: Quay lại
+            TextButton(
+                onClick = onBack,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Quay lại Hiệu suất & KPIs", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
 
 // -------------------------------------------------------------------------
 // CHI TIẾT 1: DỰ BÁO DOANH THU AI (VIP)
@@ -1903,8 +2250,27 @@ fun VipAiForecastDetailScreen(
     viewModel: CrmViewModel,
     userTier: AccountTier,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit
+    onNavigateToUpgrade: (AccountTier) -> Unit = {}
 ) {
+    if (userTier == AccountTier.FREE) {
+        LockedFeaturePaywallScreen(
+            title = "Dự báo Doanh thu AI",
+            subtitle = "Mô hình AI Target & Predictive Analytics",
+            requiredTier = AccountTier.VIP,
+            description = "Phân tích tự động tỷ lệ thắng deal và dự báo xác suất đạt KPI theo các kịch bản.",
+            highlights = listOf(
+                "Mô hình AI học máy tính toán xác suất win-rate từng deal",
+                "Phân tích kịch bản Lạc quan / Cơ sở / Thận trọng theo thời gian thực",
+                "Cảnh báo tự động khoảng cách doanh thu thiếu hụt so với mục tiêu",
+                "Đề xuất kế hoạch hành động chiến lược để bù đắp chỉ tiêu"
+            ),
+            onBack = onBack,
+            onNavigateToUpgrade = onNavigateToUpgrade,
+            viewModel = viewModel
+        )
+        return
+    }
+
     val deals by viewModel.dealsWithCustomer.collectAsStateWithLifecycle()
     val wonDeals = deals.filter { it.deal.stage.equals("WON", true) }
     val inProgressDeals = deals.filter { !it.deal.stage.equals("WON", true) && !it.deal.stage.equals("LOST", true) }
@@ -1998,8 +2364,27 @@ fun VipDealVelocityDetailScreen(
     viewModel: CrmViewModel,
     userTier: AccountTier,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit
+    onNavigateToUpgrade: (AccountTier) -> Unit = {}
 ) {
+    if (userTier == AccountTier.FREE) {
+        LockedFeaturePaywallScreen(
+            title = "Tốc độ Deal & Win-rate",
+            subtitle = "Phân tích chu kỳ chốt hợp đồng & Tỷ lệ thắng",
+            requiredTier = AccountTier.VIP,
+            description = "Theo dõi thời gian chốt deal trung bình và tỷ lệ chuyển đổi cơ hội kinh doanh.",
+            highlights = listOf(
+                "Đo lường thời gian chốt hợp đồng trung bình (chu kỳ ngày/deal)",
+                "Tỷ lệ thắng Win-rate thực tế so với tổng cơ hội kinh doanh",
+                "Phát hiện các deal bị tắc nghẽn hoặc ngâm lâu trong quy trình",
+                "Benchmark tốc độ bán hàng so với trung bình thị trường"
+            ),
+            onBack = onBack,
+            onNavigateToUpgrade = onNavigateToUpgrade,
+            viewModel = viewModel
+        )
+        return
+    }
+
     val deals by viewModel.dealsWithCustomer.collectAsStateWithLifecycle()
     val wonDeals = deals.filter { it.deal.stage.equals("WON", true) }
 
@@ -2065,8 +2450,27 @@ fun VipMultiTargetDetailScreen(
     viewModel: CrmViewModel,
     userTier: AccountTier,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit
+    onNavigateToUpgrade: (AccountTier) -> Unit = {}
 ) {
+    if (userTier == AccountTier.FREE) {
+        LockedFeaturePaywallScreen(
+            title = "Mục tiêu Cá nhân Đa chiều",
+            subtitle = "Thiết lập 4 chỉ tiêu trụ cột toàn diện",
+            requiredTier = AccountTier.VIP,
+            description = "Thiết lập chỉ tiêu doanh số, số lượng hợp đồng, khách hàng mới và tỷ lệ chuyển đổi.",
+            highlights = listOf(
+                "Tùy chỉnh mục tiêu doanh thu cá nhân linh hoạt từng tháng",
+                "Theo dõi đồng thời 4 chỉ số trụ cột quan trọng nhất",
+                "Thanh tiến độ trực quan hiển thị % hoàn thành theo thời gian thực",
+                "Gợi ý nhịp độ làm việc để cán đích trước thời hạn"
+            ),
+            onBack = onBack,
+            onNavigateToUpgrade = onNavigateToUpgrade,
+            viewModel = viewModel
+        )
+        return
+    }
+
     val deals by viewModel.dealsWithCustomer.collectAsStateWithLifecycle()
     val wonDeals = deals.filter { it.deal.stage.equals("WON", true) }
     val wonRevenue = wonDeals.sumOf { it.deal.value }
@@ -2175,9 +2579,28 @@ fun BusinessKpiEvaluationDetailScreen(
     viewModel: CrmViewModel,
     userTier: AccountTier,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit,
+    onNavigateToUpgrade: (AccountTier) -> Unit = {},
     onNavigateToPayroll: () -> Unit
 ) {
+    if (userTier != AccountTier.BUSINESS) {
+        LockedFeaturePaywallScreen(
+            title = "Đánh giá KPIs Nhân sự",
+            subtitle = "Bảng chấm điểm thi đua A/B/C/D toàn đội ngũ",
+            requiredTier = AccountTier.BUSINESS,
+            description = "Hệ thống tự động xếp loại hiệu suất làm việc của từng nhân viên theo thang điểm A/B/C/D.",
+            highlights = listOf(
+                "Chấm điểm thi đua nhân viên tự động từ kết quả công việc thực tế",
+                "Phân hạng chuẩn mực A (Xuất sắc), B (Tốt), C (Đạt), D (Cần nhắc nhở)",
+                "Đồng bộ liên thông trực tiếp với Bảng tính lương & Phụ cấp",
+                "Báo cáo phân bổ năng suất đội ngũ cho cấp Quản lý & Lãnh đạo"
+            ),
+            onBack = onBack,
+            onNavigateToUpgrade = onNavigateToUpgrade,
+            viewModel = viewModel
+        )
+        return
+    }
+
     val employees by viewModel.employees.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -2245,8 +2668,27 @@ fun BusinessDepartmentMatrixDetailScreen(
     viewModel: CrmViewModel,
     userTier: AccountTier,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit
+    onNavigateToUpgrade: (AccountTier) -> Unit = {}
 ) {
+    if (userTier != AccountTier.BUSINESS) {
+        LockedFeaturePaywallScreen(
+            title = "Ma trận Doanh số Phòng ban",
+            subtitle = "Phân tích cơ cấu & đóng góp doanh số phòng ban",
+            requiredTier = AccountTier.BUSINESS,
+            description = "Báo cáo cơ cấu doanh thu và tỷ lệ đóng góp của từng phòng ban trong công ty.",
+            highlights = listOf(
+                "Phân tách chi tiết doanh thu giữa các phòng ban: Kinh doanh, Kỹ thuật, Marketing...",
+                "Biểu đồ phân bổ tỷ trọng phần trăm trực quan và dễ so sánh",
+                "Theo dõi số lượng nhân sự và doanh số bình quân trên mỗi nhân viên",
+                "Hỗ trợ ra quyết định phân bổ nguồn lực và ngân sách tối ưu"
+            ),
+            onBack = onBack,
+            onNavigateToUpgrade = onNavigateToUpgrade,
+            viewModel = viewModel
+        )
+        return
+    }
+
     val employees by viewModel.employees.collectAsStateWithLifecycle()
     val deals by viewModel.dealsWithCustomer.collectAsStateWithLifecycle()
     val wonRevenue = deals.filter { it.deal.stage.equals("WON", true) }.sumOf { it.deal.value }
@@ -2316,9 +2758,28 @@ fun BusinessKpiCommissionDetailScreen(
     viewModel: CrmViewModel,
     userTier: AccountTier,
     onBack: () -> Unit,
-    onNavigateToUpgrade: () -> Unit,
+    onNavigateToUpgrade: (AccountTier) -> Unit = {},
     onNavigateToPayroll: () -> Unit
 ) {
+    if (userTier != AccountTier.BUSINESS) {
+        LockedFeaturePaywallScreen(
+            title = "Bậc thang Thưởng KPI & Hoa hồng",
+            subtitle = "Tự động hóa tính thưởng & đồng bộ Bảng lương",
+            requiredTier = AccountTier.BUSINESS,
+            description = "Bảng tính hoa hồng nhiều bậc tự động áp dụng theo doanh số và kết quả KPI của nhân sự.",
+            highlights = listOf(
+                "Tự động tính hoa hồng lũy tiến theo từng nấc doanh số hoàn thành",
+                "Áp dụng chính sách thưởng phân cấp minh bạch và công bằng",
+                "Đồng bộ một chạm vào bảng lương tổng hợp của doanh nghiệp",
+                "Xuất bảng kê chi tiết thưởng KPI phục vụ hạch toán kế toán"
+            ),
+            onBack = onBack,
+            onNavigateToUpgrade = onNavigateToUpgrade,
+            viewModel = viewModel
+        )
+        return
+    }
+
     val employees by viewModel.employees.collectAsStateWithLifecycle()
 
     Scaffold(

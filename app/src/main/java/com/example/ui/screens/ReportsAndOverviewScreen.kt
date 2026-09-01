@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import com.example.data.model.AccountTier
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -51,6 +53,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -61,6 +65,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -102,13 +107,15 @@ fun ReportsAnalyticsScreen(
     viewModel: CrmViewModel,
     onBack: () -> Unit,
     onNavigateToTab: ((Int) -> Unit)? = null,
-    onOpenProfile: (() -> Unit)? = null
+    onOpenProfile: (() -> Unit)? = null,
+    onNavigateToUpgrade: (() -> Unit)? = null
 ) {
     ReportsScreen(
         viewModel = viewModel,
         onBack = onBack,
         onNavigateToTab = onNavigateToTab,
-        onOpenProfile = onOpenProfile
+        onOpenProfile = onOpenProfile,
+        onNavigateToUpgrade = onNavigateToUpgrade
     )
 }
 
@@ -119,7 +126,8 @@ fun ReportsScreen(
     viewModel: CrmViewModel,
     onBack: () -> Unit,
     onNavigateToTab: ((Int) -> Unit)? = null,
-    onOpenProfile: (() -> Unit)? = null
+    onOpenProfile: (() -> Unit)? = null,
+    onNavigateToUpgrade: (() -> Unit)? = null
 ) {
     val customers by viewModel.allRawCustomers.collectAsStateWithLifecycle()
     val deals by viewModel.dealsWithCustomer.collectAsStateWithLifecycle()
@@ -129,6 +137,171 @@ fun ReportsScreen(
     val employees by viewModel.employees.collectAsStateWithLifecycle()
     val payrollPolicy by viewModel.payrollPolicy.collectAsStateWithLifecycle()
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+
+    if (userProfile.accountTier != com.example.data.model.AccountTier.BUSINESS) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Báo cáo & Phân tích", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFEDE9FE)) {
+                                    Text("BUSINESS", color = Color(0xFF7C3AED), fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                }
+                            }
+                            Text("Báo cáo số liệu toàn diện doanh nghiệp", fontSize = 12.sp, color = Color(0xFF64748B))
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                )
+            },
+            containerColor = Color(0xFFF8FAFC)
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFEDE9FE)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.TrendingUp,
+                        contentDescription = null,
+                        tint = Color(0xFF7C3AED),
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Báo cáo Thống kê Doanh nghiệp",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0F172A)
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "Tính năng Báo cáo thống kê chuyên sâu yêu cầu gói BUSINESS. Sau khi kích hoạt, toàn bộ dữ liệu phân tích sẽ tự động mở khóa theo số liệu kinh doanh thực tế.",
+                    fontSize = 13.5.sp,
+                    color = Color(0xFF64748B),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    shadowElevation = 1.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Quyền lợi báo cáo khi nâng cấp BUSINESS:",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp,
+                            color = Color(0xFF1E293B)
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        val points = listOf(
+                            "Phân tích doanh thu thực tế theo thời gian thực (Hôm nay, Tuần, Tháng, Quý, Năm)",
+                            "Lọc báo cáo theo từng phòng ban: Kinh doanh, Kỹ thuật, Kế toán, Marketing",
+                            "Bảng theo dõi ngân sách tiền lương, thưởng KPI & xếp hạng thi đua nhân sự",
+                            "Thống kê tỷ lệ chuyển đổi báo giá và tiến độ hợp đồng toàn doanh nghiệp"
+                        )
+                        points.forEach { point ->
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                modifier = Modifier.padding(vertical = 3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = Color(0xFF7C3AED),
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .padding(top = 2.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = point,
+                                    fontSize = 12.5.sp,
+                                    color = Color(0xFF334155),
+                                    lineHeight = 17.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Nút 1: Đăng ký sử dụng (Kích hoạt trực tiếp)
+                Button(
+                    onClick = { viewModel.setAccountTier(AccountTier.BUSINESS) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("ĐĂNG KÝ SỬ DỤNG GÓI BUSINESS", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Nút 2: Xem gói
+                OutlinedButton(
+                    onClick = { onNavigateToUpgrade?.invoke() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF7C3AED)),
+                    border = BorderStroke(1.dp, Color(0xFF7C3AED))
+                ) {
+                    Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("XEM CHI TIẾT GÓI BUSINESS", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Quay lại", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+        return
+    }
 
     // 1. Interactive Time Filter Options
     val periodOptions = listOf(

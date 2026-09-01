@@ -224,14 +224,13 @@ class CrmRepository(
 
     // Reset & Comprehensive Seed Data from Dec 2025 to Aug 2026
     suspend fun resetToComprehensiveSeedData() {
-        if (customerTypeDao.getCount() == 0) {
-            customerTypeDao.insertCustomerTypes(getDefaultCustomerTypes())
-        }
         taskDao.deleteAllTasks()
         interactionDao.deleteAllInteractions()
         dealDao.deleteAllDeals()
         customerDao.deleteAllCustomers()
+        customerTypeDao.deleteAllCustomerTypes()
 
+        customerTypeDao.insertCustomerTypes(getDefaultCustomerTypes())
         customerDao.insertCustomers(CrmSeedData.getSampleCustomers())
         dealDao.insertDeals(CrmSeedData.getSampleDeals())
         interactionDao.insertInteractions(CrmSeedData.getSampleInteractions())
