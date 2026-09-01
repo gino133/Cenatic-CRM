@@ -584,6 +584,16 @@ fun calculateEmployeePayroll(
     )
 }
 
+enum class AccountTier(val displayName: String, val badge: String) {
+    FREE("Tài khoản Miễn phí", "FREE"),
+    VIP("Tài khoản VIP", "VIP"),
+    BUSINESS("Tài khoản BUSINESS", "BUSINESS");
+
+    val isFree: Boolean get() = this == FREE
+    val isVipOrHigher: Boolean get() = this == VIP || this == BUSINESS
+    val isBusiness: Boolean get() = this == BUSINESS
+}
+
 // User Profile model
 data class UserProfile(
     val fullName: String = "Quản Trị Viên VIP",
@@ -593,7 +603,8 @@ data class UserProfile(
     val address: String = "123 Đường Lê Lợi, Quận 1, TP.HCM",
     val role: String = "VIP ENTERPRISE",
     val avatarUrl: String? = null,
-    val isVip: Boolean = true
+    val isVip: Boolean = true,
+    val accountTier: AccountTier = AccountTier.VIP
 )
 
 // Notification Settings model

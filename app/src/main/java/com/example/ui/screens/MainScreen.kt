@@ -120,7 +120,9 @@ enum class FullScreenMode {
     EDIT_PROFILE,
     SENIORITY_SETTINGS,
     ACCOUNT_SETTINGS,
-    BACKUP_SYNC
+    BACKUP_SYNC,
+    REVENUE_DETAIL,
+    KPI_PERFORMANCE
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -381,6 +383,38 @@ fun MainScreen(viewModel: CrmViewModel) {
             )
             return
         }
+        FullScreenMode.REVENUE_DETAIL -> {
+            if (userProfile.accountTier == com.example.data.model.AccountTier.FREE) {
+                FreeRevenueScreen(
+                    viewModel = viewModel,
+                    onBack = { fullScreenMode = FullScreenMode.NONE },
+                    onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE }
+                )
+            } else {
+                VipRevenueScreen(
+                    viewModel = viewModel,
+                    onBack = { fullScreenMode = FullScreenMode.NONE },
+                    onNavigateToQuotes = {
+                        quotesInitialTab = 0
+                        fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
+                    },
+                    onNavigateToCustomers = {
+                        fullScreenMode = FullScreenMode.NONE
+                        currentNavIndex = 1
+                    }
+                )
+            }
+            return
+        }
+        FullScreenMode.KPI_PERFORMANCE -> {
+            UnifiedPerformanceKpiScreen(
+                viewModel = viewModel,
+                onBack = { fullScreenMode = FullScreenMode.NONE },
+                onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE },
+                onNavigateToPayroll = { fullScreenMode = FullScreenMode.PAYROLL }
+            )
+            return
+        }
         else -> {}
     }
 
@@ -596,7 +630,13 @@ fun MainScreen(viewModel: CrmViewModel) {
                             onNavigateToTasks = { currentNavIndex = 2 },
                             onOpenCustomerDetail = { id -> viewModel.selectCustomer(id) },
                             onOpenProfile = { fullScreenMode = FullScreenMode.EDIT_PROFILE },
-                            onOpenReports = { fullScreenMode = FullScreenMode.REPORTS },
+                            onOpenReports = {
+                                when (userProfile.accountTier) {
+                                    com.example.data.model.AccountTier.FREE -> fullScreenMode = FullScreenMode.REVENUE_DETAIL
+                                    com.example.data.model.AccountTier.VIP -> fullScreenMode = FullScreenMode.REVENUE_DETAIL
+                                    com.example.data.model.AccountTier.BUSINESS -> fullScreenMode = FullScreenMode.REPORTS
+                                }
+                            },
                             onAddCustomerClick = {
                                 customerToEdit = null
                                 fullScreenMode = FullScreenMode.ADD_CORPORATE_CUSTOMER
@@ -674,7 +714,7 @@ fun MainScreen(viewModel: CrmViewModel) {
                             onNavigateToBackupSync = { fullScreenMode = FullScreenMode.BACKUP_SYNC },
                             onNavigateToUpgrade = { fullScreenMode = FullScreenMode.UPGRADE },
                             onNavigateToReports = { fullScreenMode = FullScreenMode.REPORTS },
-                            onNavigateToOverview = { fullScreenMode = FullScreenMode.ACCOUNT_OVERVIEW },
+                            onNavigateToOverview = { fullScreenMode = FullScreenMode.KPI_PERFORMANCE },
                             onLogout = { viewModel.logout() }
                         )
                     }

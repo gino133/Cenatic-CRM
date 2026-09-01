@@ -41,6 +41,9 @@ interface CustomerDao {
     @Query("DELETE FROM customers WHERE id = :id")
     suspend fun deleteCustomerById(id: Long)
 
+    @Query("DELETE FROM customers")
+    suspend fun deleteAllCustomers()
+
     @Query("SELECT COUNT(*) FROM customers")
     fun getCustomerCount(): Flow<Int>
 

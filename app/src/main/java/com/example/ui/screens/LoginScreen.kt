@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,11 +33,13 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MarkEmailRead
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
@@ -63,6 +66,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,8 +86,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.local.LocalAccount
 import com.example.data.local.UserPreferences
+import com.example.data.model.SecuritySettings
 import com.example.ui.theme.ProfessionalPrimary
 import com.example.ui.theme.ProfessionalPrimaryNavy
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 enum class AuthMode {
     LOGIN,
@@ -144,6 +151,33 @@ fun LoginScreen(
     var pendingVerificationAccount by remember { mutableStateOf<RegisteredAccount?>(null) }
     var showGoogleAccountSelectorDialog by remember { mutableStateOf(false) }
     var showActivationSuccessDialog by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    val securitySettings = userPreferences?.getSecuritySettings() ?: SecuritySettings()
+
+    // 2FA Dialog State
+    var show2FADialog by remember { mutableStateOf(false) }
+    var pending2FAEmail by remember { mutableStateOf("") }
+    var pending2FAName by remember { mutableStateOf("") }
+    var twoFactorOtpInput by remember { mutableStateOf("") }
+    var twoFactorOtpError by remember { mutableStateOf<String?>(null) }
+
+    // Biometric Auth State
+    var showBiometricAuthDialog by remember { mutableStateOf(false) }
+    var isBiometricScanning by remember { mutableStateOf(false) }
+    var isBiometricSuccess by remember { mutableStateOf(false) }
+
+    val handleAuthSuccess: (String, String) -> Unit = { email, name ->
+        if (securitySettings.twoFactorAuth) {
+            pending2FAEmail = email
+            pending2FAName = name
+            twoFactorOtpInput = ""
+            twoFactorOtpError = null
+            show2FADialog = true
+        } else {
+            onLoginSuccess(email, name)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -382,7 +416,7 @@ fun LoginScreen(
                                                 pendingVerificationAccount = it
                                                 showVerificationEmailDialog = true
                                             },
-                                            onSuccess = onLoginSuccess
+                                            onSuccess = handleAuthSuccess
                                         )
                                     }),
                                     shape = RoundedCornerShape(12.dp),
@@ -413,6 +447,63 @@ fun LoginScreen(
                                     )
                                 }
 
+                                if (securitySettings.biometricAuth) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Surface(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable {
+                                                isBiometricScanning = false
+                                                isBiometricSuccess = false
+                                                showBiometricAuthDialog = true
+                                            },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0xFFF0FDF4),
+                                        border = BorderStroke(1.dp, Color(0xFF86EFAC))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color(0xFFDCFCE7)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Fingerprint,
+                                                    contentDescription = "Biometric",
+                                                    tint = Color(0xFF16A34A),
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "Đăng nhập bằng Sinh trắc học",
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color(0xFF166534)
+                                                )
+                                                Text(
+                                                    text = "Mở khóa nhanh bằng Vân tay / Face ID",
+                                                    fontSize = 11.sp,
+                                                    color = Color(0xFF15803D)
+                                                )
+                                            }
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                                contentDescription = null,
+                                                tint = Color(0xFF16A34A),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
                                 Spacer(modifier = Modifier.height(18.dp))
 
                                 // Login Button
@@ -428,7 +519,7 @@ fun LoginScreen(
                                                 pendingVerificationAccount = it
                                                 showVerificationEmailDialog = true
                                             },
-                                            onSuccess = onLoginSuccess
+                                            onSuccess = handleAuthSuccess
                                         )
                                     },
                                     modifier = Modifier
@@ -1018,7 +1109,7 @@ fun LoginScreen(
                                 avatarChar = acc.fullName.firstOrNull()?.toString()?.uppercase() ?: "G",
                                 onClick = {
                                     showGoogleAccountSelectorDialog = false
-                                    onLoginSuccess(acc.email, acc.fullName)
+                                    handleAuthSuccess(acc.email, acc.fullName)
                                 }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -1116,7 +1207,7 @@ fun LoginScreen(
                                 )
                             )
                             showGoogleAccountSelectorDialog = false
-                            onLoginSuccess(newGoogleAcc.email, newGoogleAcc.fullName)
+                            handleAuthSuccess(newGoogleAcc.email, newGoogleAcc.fullName)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1340,7 +1431,7 @@ fun LoginScreen(
                     onClick = {
                         showActivationSuccessDialog = false
                         // Automatically log user in
-                        onLoginSuccess(account.email, account.fullName)
+                        handleAuthSuccess(account.email, account.fullName)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary),
                     shape = RoundedCornerShape(10.dp)
@@ -1358,6 +1449,207 @@ fun LoginScreen(
                     }
                 ) {
                     Text("Về trang đăng nhập")
+                }
+            }
+        )
+    }
+
+    // ==========================================
+    // 2FA VERIFICATION DIALOG (TOTP)
+    // ==========================================
+    if (show2FADialog) {
+        AlertDialog(
+            onDismissRequest = { show2FADialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFEFF6FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = "2FA",
+                        tint = ProfessionalPrimary,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Xác thực 2 yếu tố (2FA)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Tài khoản của bạn đã kích hoạt bảo vệ 2 lớp. Vui lòng nhập mã 6 số từ Google Authenticator hoặc Microsoft Authenticator.",
+                        fontSize = 13.sp,
+                        color = Color(0xFF64748B),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    OutlinedTextField(
+                        value = twoFactorOtpInput,
+                        onValueChange = {
+                            if (it.length <= 6 && it.all { char -> char.isDigit() }) {
+                                twoFactorOtpInput = it
+                                twoFactorOtpError = null
+                            }
+                        },
+                        label = { Text("Mã xác thực 6 chữ số") },
+                        placeholder = { Text("Ví dụ: 123456") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            if (twoFactorOtpInput.length == 6) {
+                                show2FADialog = false
+                                onLoginSuccess(pending2FAEmail, pending2FAName)
+                            } else {
+                                twoFactorOtpError = "Vui lòng nhập đủ 6 chữ số OTP"
+                            }
+                        }),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (twoFactorOtpError != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = twoFactorOtpError ?: "",
+                            color = Color(0xFFDC2626),
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (twoFactorOtpInput.length == 6) {
+                            show2FADialog = false
+                            onLoginSuccess(pending2FAEmail, pending2FAName)
+                        } else {
+                            twoFactorOtpError = "Vui lòng nhập đủ 6 chữ số OTP từ ứng dụng Authenticator"
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimary),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Xác nhận đăng nhập", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { show2FADialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+
+    // ==========================================
+    // BIOMETRIC AUTHENTICATION DIALOG
+    // ==========================================
+    if (showBiometricAuthDialog) {
+        val targetBioAccount = accounts.firstOrNull() ?: RegisteredAccount(
+            email = UserPreferences.DEFAULT_EMAIL,
+            password = "",
+            fullName = UserPreferences.DEFAULT_NAME,
+            isVerified = true
+        )
+
+        AlertDialog(
+            onDismissRequest = {
+                if (!isBiometricScanning) showBiometricAuthDialog = false
+            },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(if (isBiometricSuccess) Color(0xFFDCFCE7) else Color(0xFFEFF6FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isBiometricSuccess) Icons.Default.CheckCircle else Icons.Default.Fingerprint,
+                        contentDescription = "Fingerprint Scan",
+                        tint = if (isBiometricSuccess) Color(0xFF16A34A) else ProfessionalPrimary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = if (isBiometricSuccess) "Xác thực thành công!" else "Xác thực Sinh trắc học",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (isBiometricSuccess)
+                            "Chào mừng trở lại, ${targetBioAccount.fullName}! Đang chuyển vào hệ thống..."
+                        else
+                            "Chạm vào biểu tượng cảm biến vân tay bên dưới để xác thực và đăng nhập nhanh vào tài khoản: ${targetBioAccount.email}",
+                        fontSize = 13.sp,
+                        color = Color(0xFF64748B),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Surface(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .clickable(enabled = !isBiometricScanning && !isBiometricSuccess) {
+                                isBiometricScanning = true
+                                scope.launch {
+                                    delay(600)
+                                    isBiometricScanning = false
+                                    isBiometricSuccess = true
+                                    delay(400)
+                                    showBiometricAuthDialog = false
+                                    handleAuthSuccess(targetBioAccount.email, targetBioAccount.fullName)
+                                }
+                            },
+                        shape = CircleShape,
+                        color = if (isBiometricSuccess) Color(0xFF16A34A) else if (isBiometricScanning) Color(0xFFDBEAFE) else Color(0xFFF1F5F9),
+                        border = BorderStroke(2.dp, if (isBiometricSuccess) Color(0xFF16A34A) else ProfessionalPrimary)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isBiometricSuccess) Icons.Default.CheckCircle else Icons.Default.Fingerprint,
+                                contentDescription = "Scan",
+                                tint = if (isBiometricSuccess) Color.White else ProfessionalPrimary,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = if (isBiometricScanning) "Đang quét cảm biến sinh trắc học..." else if (isBiometricSuccess) "✅ Hoàn tất" else "Chạm để quét vân tay",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isBiometricSuccess) Color(0xFF16A34A) else ProfessionalPrimary
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(
+                    onClick = { showBiometricAuthDialog = false },
+                    enabled = !isBiometricScanning
+                ) {
+                    Text("Hủy / Đăng nhập bằng mật khẩu")
                 }
             }
         )

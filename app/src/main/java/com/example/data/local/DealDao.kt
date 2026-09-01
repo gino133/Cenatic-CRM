@@ -41,6 +41,9 @@ interface DealDao {
     @Query("DELETE FROM deals WHERE id = :id")
     suspend fun deleteDealById(id: Long)
 
+    @Query("DELETE FROM deals")
+    suspend fun deleteAllDeals()
+
     @Query("SELECT SUM(value) FROM deals WHERE stage = 'WON'")
     fun getTotalWonRevenue(): Flow<Double?>
 

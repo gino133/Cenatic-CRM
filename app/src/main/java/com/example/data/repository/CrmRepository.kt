@@ -222,6 +222,22 @@ class CrmRepository(
         )
     }
 
+    // Reset & Comprehensive Seed Data from Dec 2025 to Aug 2026
+    suspend fun resetToComprehensiveSeedData() {
+        if (customerTypeDao.getCount() == 0) {
+            customerTypeDao.insertCustomerTypes(getDefaultCustomerTypes())
+        }
+        taskDao.deleteAllTasks()
+        interactionDao.deleteAllInteractions()
+        dealDao.deleteAllDeals()
+        customerDao.deleteAllCustomers()
+
+        customerDao.insertCustomers(CrmSeedData.getSampleCustomers())
+        dealDao.insertDeals(CrmSeedData.getSampleDeals())
+        interactionDao.insertInteractions(CrmSeedData.getSampleInteractions())
+        taskDao.insertTasks(CrmSeedData.getSampleTasks())
+    }
+
     // Initial Seed Data
     suspend fun seedInitialDataIfEmpty() {
         if (customerTypeDao.getCount() == 0) {
@@ -230,271 +246,10 @@ class CrmRepository(
 
         val count = customerDao.getAllCustomers().first().size
         if (count == 0) {
-            val now = System.currentTimeMillis()
-            val oneDay = 24L * 60 * 60 * 1000
-            val oneHour = 60L * 60 * 1000
-
-            val sampleCustomers = listOf(
-                CustomerEntity(
-                    id = 1,
-                    name = "Nguyễn Văn A",
-                    company = "Công ty CP Công Nghệ TechVN",
-                    position = "Giám đốc Công nghệ",
-                    phone = "0988 123 456",
-                    email = "nguyenvana@techvn.com",
-                    address = "Tòa nhà TechVN, Duy Tân, Cầu Giấy, Hà Nội",
-                    status = CustomerStatus.LEAD.name,
-                    source = "Website",
-                    tags = "Phần mềm, Cloud, Tiềm năng cao",
-                    estimatedValue = 180_000_000.0,
-                    progressPercent = 70,
-                    notes = "Khách hàng rất quan tâm tới phân hệ quản lý quan hệ khách hàng và quy trình bán hàng tự động.",
-                    avatarColorHex = "#2563EB",
-                    createdAt = now - 15 * oneDay,
-                    updatedAt = now - 2 * oneHour
-                ),
-                CustomerEntity(
-                    id = 2,
-                    name = "Trần Thị B",
-                    company = "Tập đoàn Xây dựng Hưng Phát",
-                    position = "Tổng Giám Đốc",
-                    phone = "0912 345 678",
-                    email = "tran.b@hungphatgroup.vn",
-                    address = "128 Nguyễn Đình Chiểu, Quận 3, TP. Hồ Chí Minh",
-                    status = CustomerStatus.CLOSED.name,
-                    source = "Giới thiệu",
-                    tags = "Xây dựng, Hợp đồng lớn, Đã chốt",
-                    estimatedValue = 350_000_000.0,
-                    progressPercent = 100,
-                    notes = "Đã ký kết hợp đồng thi công và triển khai giải pháp quản lý tiến độ dự án toàn diện.",
-                    avatarColorHex = "#10B981",
-                    createdAt = now - 30 * oneDay,
-                    updatedAt = now - 4 * oneHour
-                ),
-                CustomerEntity(
-                    id = 3,
-                    name = "Lê Hoàng C",
-                    company = "Công ty TNHH Thương Mại Toàn Cầu",
-                    position = "Trưởng phòng Kinh doanh",
-                    phone = "0977 654 321",
-                    email = "lehoangc@toancau.vn",
-                    address = "Số 45 Lê Thánh Tông, Ngô Quyền, Hải Phòng",
-                    status = CustomerStatus.LEAD.name,
-                    source = "Sự kiện",
-                    tags = "Thương mại, Xuất nhập khẩu",
-                    estimatedValue = 95_000_000.0,
-                    progressPercent = 40,
-                    notes = "Đang xem xét báo giá gói quản lý kho và kết nối cổng thanh toán.",
-                    avatarColorHex = "#0EA5E9",
-                    createdAt = now - 8 * oneDay,
-                    updatedAt = now - 1 * oneDay
-                ),
-                CustomerEntity(
-                    id = 4,
-                    name = "Phạm Thị D",
-                    company = "Dịch vụ Tư vấn ABC",
-                    position = "Phó Giám Đốc",
-                    phone = "0933 888 999",
-                    email = "phamthid@tuvanabc.vn",
-                    address = "250 Võ Văn Kiệt, Quận 1, TP. Hồ Chí Minh",
-                    status = CustomerStatus.INACTIVE.name,
-                    source = "Mạng xã hội",
-                    tags = "Tư vấn tài chính, Tạm ngưng",
-                    estimatedValue = 25_000_000.0,
-                    progressPercent = 15,
-                    notes = "Tạm ngưng dự án do thay đổi kế hoạch ngân sách nội bộ.",
-                    avatarColorHex = "#64748B",
-                    createdAt = now - 45 * oneDay,
-                    updatedAt = now - 10 * oneDay
-                ),
-                CustomerEntity(
-                    id = 5,
-                    name = "Nguyễn Văn Khang",
-                    company = "Tập đoàn Khang Điền",
-                    position = "Chủ Tịch HĐQT",
-                    phone = "090 123 4567",
-                    email = "khang.nguyen@khangdien.vn",
-                    address = "Số 45, Đường Lê Lợi, Phường Bến Nghé, Quận 1, Thành phố Hồ Chí Minh",
-                    status = CustomerStatus.VIP.name,
-                    source = "Đối tác chiến lược",
-                    tags = "Khách hàng VIP, Bất động sản, Trọng điểm",
-                    estimatedValue = 500_000_000.0,
-                    progressPercent = 85,
-                    dob = "15/08/1982",
-                    notes = "Khách hàng VIP đặc biệt cần chế độ chăm sóc ưu tiên 24/7.",
-                    avatarColorHex = "#7C3AED",
-                    createdAt = now - 60 * oneDay,
-                    updatedAt = now - 1 * oneHour
-                )
-            )
-            customerDao.insertCustomers(sampleCustomers)
-
-            val sampleDeals = listOf(
-                DealEntity(
-                    id = 1,
-                    customerId = 1,
-                    title = "Triển khai ERP Cloud Core 100 Người dùng",
-                    value = 280_000_000.0,
-                    stage = DealStage.WON.name,
-                    probability = 100,
-                    notes = "Đã ký kết hợp đồng chính thức, tiến hành kick-off vào đầu tháng sau.",
-                    createdAt = now - 18 * oneDay
-                ),
-                DealEntity(
-                    id = 2,
-                    customerId = 2,
-                    title = "Gói Quản lý Bán lẻ & Tích điểm EcoMart",
-                    value = 120_000_000.0,
-                    stage = DealStage.WON.name,
-                    probability = 100,
-                    notes = "Đã thanh toán 100% hợp đồng năm đầu tiên.",
-                    createdAt = now - 12 * oneDay
-                ),
-                DealEntity(
-                    id = 3,
-                    customerId = 3,
-                    title = "Hợp đồng Đối tác Kết nối API Giao vận Toàn quốc",
-                    value = 450_000_000.0,
-                    stage = DealStage.NEGOTIATION.name,
-                    probability = 75,
-                    notes = "Thảo luận chia sẻ doanh thu và cam kết SLA tốc độ xử lý đơn hàng.",
-                    createdAt = now - 25 * oneDay
-                ),
-                DealEntity(
-                    id = 4,
-                    customerId = 4,
-                    title = "Phần mềm Quản lý Khách hàng Showroom Casa",
-                    value = 45_000_000.0,
-                    stage = DealStage.PROPOSAL.name,
-                    probability = 40,
-                    notes = "Đã gửi bảng báo giá kèm ưu đãi tặng 3 tháng sử dụng máy quét mã vạch.",
-                    createdAt = now - 4 * oneDay
-                ),
-                DealEntity(
-                    id = 5,
-                    customerId = 5,
-                    title = "Hệ thống Quản lý Phân phối Dược An Khang",
-                    value = 350_000_000.0,
-                    stage = DealStage.LEAD.name,
-                    probability = 20,
-                    notes = "Chuẩn bị tài liệu kỹ thuật tham gia vòng thuyết trình giải pháp.",
-                    createdAt = now - 7 * oneDay
-                )
-            )
-            dealDao.insertDeals(sampleDeals)
-
-            val sampleInteractions = listOf(
-                InteractionEntity(
-                    id = 1,
-                    customerId = 1,
-                    type = InteractionType.CALL.name,
-                    title = "Gọi điện thống nhất lịch họp kick-off dự án",
-                    content = "Trao đổi với anh Nam về danh sách nhân sự tham gia đội triển khai dự án ERP.",
-                    date = now - 2 * oneHour,
-                    outcome = "Anh Nam chốt họp vào sáng thứ 2 tuần tới lúc 9:00 tại trụ sở VinaTech.",
-                    followUpDate = now + 4 * oneDay
-                ),
-                InteractionEntity(
-                    id = 2,
-                    customerId = 2,
-                    type = InteractionType.MEETING.name,
-                    title = "Họp đánh giá hiệu quả triển khai tháng đầu tiên",
-                    content = "Họp trực tiếp tại văn phòng EcoMart với chị Mai Phương cùng 3 quản lý cửa hàng.",
-                    date = now - 2 * oneDay,
-                    outcome = "Khách hàng rất hài lòng về tính ổn định, đề xuất tích hợp thêm hóa đơn điện tử.",
-                    followUpDate = now + 7 * oneDay
-                ),
-                InteractionEntity(
-                    id = 3,
-                    customerId = 3,
-                    type = InteractionType.CONTRACT.name,
-                    title = "Ký kết thỏa thuận hợp tác đối tác chiến lược",
-                    content = "Ký kết biên bản ghi nhớ hợp tác tích hợp API kết nối kho và giao vận logistics.",
-                    date = now - 5 * oneDay,
-                    outcome = "Hoàn tất thủ tục pháp lý, đội IT bắt đầu test API Sandbox.",
-                    followUpDate = now + 10 * oneDay
-                ),
-                InteractionEntity(
-                    id = 4,
-                    customerId = 4,
-                    type = InteractionType.MESSAGE.name,
-                    title = "Nhắn tin Zalo gửi tài liệu và catalog giải pháp",
-                    content = "Gửi anh Tuấn tài liệu hướng dẫn quản lý thông tin khách hàng và theo dõi lịch bảo hành nội thất.",
-                    date = now - 10 * oneHour,
-                    outcome = "Anh Tuấn phản hồi sẽ xem và liên hệ đặt lịch demo.",
-                    followUpDate = now + 1 * oneDay
-                ),
-                InteractionEntity(
-                    id = 5,
-                    customerId = 5,
-                    type = InteractionType.EMAIL.name,
-                    title = "Gửi bảng báo giá chi tiết và hồ sơ năng lực",
-                    content = "Gửi email báo giá phân hệ phân phối kèm chứng chỉ ISO 27001 và danh sách dự án tương tự.",
-                    date = now - 1 * oneDay,
-                    outcome = "Chị Thảo xác nhận đã nhận email và chuyển ban kiểm toán thẩm định.",
-                    followUpDate = now + 3 * oneDay
-                )
-            )
-            interactionDao.insertInteractions(sampleInteractions)
-
-            val sampleTasks = listOf(
-                TaskEntity(
-                    id = 1,
-                    customerId = 1,
-                    title = "Gọi điện tư vấn sản phẩm mới cho Công ty CP Đầu tư X",
-                    description = "Trao đổi về các tính năng mới trong bản cập nhật CRM quý 4.",
-                    dueDate = now + 1 * oneHour,
-                    priority = TaskPriority.HIGH.name,
-                    isCompleted = false,
-                    taskType = TaskType.CALL_BACK.name,
-                    location = "10:00 AM"
-                ),
-                TaskEntity(
-                    id = 2,
-                    customerId = 2,
-                    title = "Chuẩn bị hồ sơ dự thầu gói thầu xây dựng khu đô thị",
-                    description = "Rà soát lại phụ lục bảng giá và chứng chỉ năng lực xây dựng.",
-                    dueDate = now + 4 * oneHour,
-                    priority = TaskPriority.MEDIUM.name,
-                    isCompleted = false,
-                    taskType = TaskType.SEND_PROPOSAL.name,
-                    location = "14:30 PM"
-                ),
-                TaskEntity(
-                    id = 3,
-                    customerId = 3,
-                    title = "Gửi email follow-up sau buổi họp với đối tác Nhật Bản",
-                    description = "Gửi biên bản tổng kết cuộc họp và kế hoạch thực hiện các mốc tiếp theo.",
-                    dueDate = now + 6 * oneHour,
-                    priority = TaskPriority.HIGH.name,
-                    isCompleted = false,
-                    taskType = TaskType.FOLLOW_UP.name,
-                    location = "16:00 PM"
-                ),
-                TaskEntity(
-                    id = 4,
-                    customerId = 1,
-                    title = "Cập nhật báo cáo doanh thu",
-                    description = "Tổng hợp dữ liệu doanh số tuần và gửi báo cáo cho ban giám đốc.",
-                    dueDate = now + 4 * oneHour,
-                    priority = TaskPriority.HIGH.name,
-                    isCompleted = false,
-                    taskType = TaskType.MEETING.name,
-                    location = "14:00 PM"
-                ),
-                TaskEntity(
-                    id = 5,
-                    customerId = 2,
-                    title = "Gặp khách hàng dự án Alpha",
-                    description = "Gặp mặt đại diện khách hàng để thẩm định các yêu cầu bổ sung.",
-                    dueDate = now + 6 * oneHour,
-                    priority = TaskPriority.MEDIUM.name,
-                    isCompleted = false,
-                    taskType = TaskType.MEETING.name,
-                    location = "16:30 PM"
-                )
-            )
-            taskDao.insertTasks(sampleTasks)
+            customerDao.insertCustomers(CrmSeedData.getSampleCustomers())
+            dealDao.insertDeals(CrmSeedData.getSampleDeals())
+            interactionDao.insertInteractions(CrmSeedData.getSampleInteractions())
+            taskDao.insertTasks(CrmSeedData.getSampleTasks())
         }
     }
 }

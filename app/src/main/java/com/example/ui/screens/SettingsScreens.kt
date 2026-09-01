@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -60,6 +62,7 @@ import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhoneIphone
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
@@ -67,6 +70,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SupervisorAccount
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.AlertDialog
@@ -82,6 +86,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -116,6 +122,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Calendar
@@ -193,6 +200,7 @@ import com.example.data.model.SeniorityMilestone
 import com.example.data.model.defaultSeniorityMilestones
 import kotlinx.coroutines.launch
 import com.example.R
+import com.example.data.model.AccountTier
 import com.example.data.model.AttendanceRecord
 import com.example.data.model.AttendanceType
 import com.example.data.model.EmployeeItem
@@ -222,7 +230,7 @@ fun UpgradeAccountScreen(
     viewModel: CrmViewModel,
     onBack: () -> Unit
 ) {
-    VipUpgradeScreen(onBack = onBack)
+    VipUpgradeScreen(viewModel = viewModel, onBack = onBack)
 }
 
 enum class SettingsSubScreen {
@@ -329,17 +337,27 @@ fun SettingsHubScreen(
                         color = Color(0xFF64748B)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = Color(0xFFEFF6FF)
-                    ) {
-                        Text(
-                            text = userProfile.role,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ProfessionalPrimary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = when (userProfile.accountTier) {
+                                com.example.data.model.AccountTier.FREE -> Color(0xFFF1F5F9)
+                                com.example.data.model.AccountTier.VIP -> Color(0xFFFEF3C7)
+                                com.example.data.model.AccountTier.BUSINESS -> Color(0xFFEDE9FE)
+                            }
+                        ) {
+                            Text(
+                                text = userProfile.accountTier.displayName.uppercase(),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = when (userProfile.accountTier) {
+                                    com.example.data.model.AccountTier.FREE -> Color(0xFF64748B)
+                                    com.example.data.model.AccountTier.VIP -> Color(0xFFD97706)
+                                    com.example.data.model.AccountTier.BUSINESS -> Color(0xFF7C3AED)
+                                },
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                 }
 
@@ -351,6 +369,19 @@ fun SettingsHubScreen(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Quick Tier Switcher & Data Reset for Testing
+        AccountTierTestingCard(
+            currentTier = userProfile.accountTier,
+            onSelectTier = { newTier ->
+                viewModel.setAccountTier(newTier)
+            },
+            onResetData = {
+                viewModel.resetToComprehensiveSeedData()
+            }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -5913,15 +5944,23 @@ fun SecurityScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // ================= 1. THIẾT BỊ & PHIÊN ĐĂNG NHẬP =================
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp, bottom = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SettingsGroupHeader("THIẾT BỊ & PHIÊN ĐĂNG NHẬP")
+                Text(
+                    text = "THIẾT BỊ & PHIÊN ĐĂNG NHẬP",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF64748B),
+                    letterSpacing = 0.8.sp
+                )
                 if (sessionList.size > 1) {
                     Text(
                         text = "Đăng xuất tất cả",
@@ -5930,7 +5969,7 @@ fun SecurityScreen(
                         color = Color(0xFFDC2626),
                         modifier = Modifier
                             .clickable { showLogoutAllDialog = true }
-                            .padding(bottom = 4.dp)
+                            .padding(bottom = 2.dp)
                     )
                 }
             }
@@ -6015,7 +6054,7 @@ fun SecurityScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // ================= 2. NHẬT KÝ HOẠT ĐỘNG BẢO MẬT =================
             SettingsGroupHeader("NHẬT KÝ BẢO MẬT GẦN ĐÂY")
@@ -6051,7 +6090,7 @@ fun SecurityScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // ================= 3. MẬT KHẨU & XÁC THỰC (ĐƯA XUỐNG DƯỚI) =================
             SettingsGroupHeader("MẬT KHẨU & XÁC THỰC")
@@ -6066,7 +6105,7 @@ fun SecurityScreen(
                     SettingsRowItem(
                         icon = Icons.Default.VpnKey,
                         title = "Đổi mật khẩu",
-                        subtitle = "Yêu cầu: Chữ hoa, thường, số, ký tự đặc biệt, tối thiểu 8 ký tự",
+                        subtitle = "Cập nhật mật khẩu định kỳ 90 ngày",
                         badge = "BẢO VỆ",
                         badgeBg = Color(0xFFEFF6FF),
                         badgeColor = Color(0xFF1D4ED8),
@@ -6991,6 +7030,7 @@ fun BackupAndSyncScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VipUpgradeScreen(
+    viewModel: CrmViewModel? = null,
     onBack: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
@@ -7373,6 +7413,8 @@ fun VipUpgradeScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        val tier = if (selectedTierTab == 0) com.example.data.model.AccountTier.VIP else com.example.data.model.AccountTier.BUSINESS
+                        viewModel?.setAccountTier(tier)
                         showTrialSuccessDialog = false
                         onBack()
                     },
@@ -7437,13 +7479,20 @@ fun PlanCard(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             if (badge != null) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFFDEF7EC))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFFDEF7EC),
+                    modifier = Modifier.wrapContentSize()
                 ) {
-                    Text(badge, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                    Text(
+                        text = badge,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF047857),
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
             }
@@ -7461,16 +7510,16 @@ fun PlanCard(
 }
 
 @Composable
-fun SettingsGroupHeader(title: String) {
+fun SettingsGroupHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
-        fontSize = 12.sp,
+        fontSize = 11.sp,
         fontWeight = FontWeight.Bold,
         color = Color(0xFF64748B),
-        letterSpacing = 1.sp,
-        modifier = Modifier
+        letterSpacing = 0.8.sp,
+        modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 6.dp)
+            .padding(top = 4.dp, bottom = 4.dp)
     )
 }
 
@@ -7488,11 +7537,14 @@ fun SettingsRowItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
@@ -7500,23 +7552,48 @@ fun SettingsRowItem(
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+            Column(modifier = Modifier.weight(1f, fill = false)) {
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF0F172A),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 if (subtitle != null) {
-                    Text(text = subtitle, fontSize = 12.sp, color = Color(0xFF64748B))
+                    Text(
+                        text = subtitle,
+                        fontSize = 12.sp,
+                        color = Color(0xFF64748B),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.wrapContentWidth()
+        ) {
             if (badge != null) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(badgeBg)
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = badgeBg,
+                    modifier = Modifier.wrapContentSize()
                 ) {
-                    Text(badge, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = badgeColor)
+                    Text(
+                        text = badge,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = badgeColor,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
             }
@@ -7601,6 +7678,152 @@ fun VipFeatureBullet(
                 color = Color(0xFF64748B),
                 lineHeight = 17.sp
             )
+        }
+    }
+}
+
+@Composable
+fun AccountTierTestingCard(
+    currentTier: AccountTier,
+    onSelectTier: (AccountTier) -> Unit,
+    onResetData: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        tint = ProfessionalPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Chế độ gói & Dữ liệu kiểm thử",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.5.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = when (currentTier) {
+                        AccountTier.FREE -> Color(0xFFF1F5F9)
+                        AccountTier.VIP -> Color(0xFFFEF3C7)
+                        AccountTier.BUSINESS -> Color(0xFFEDE9FE)
+                    }
+                ) {
+                    Text(
+                        text = "Gói: ${currentTier.displayName}",
+                        color = when (currentTier) {
+                            AccountTier.FREE -> Color(0xFF475569)
+                            AccountTier.VIP -> Color(0xFFD97706)
+                            AccountTier.BUSINESS -> Color(0xFF7C3AED)
+                        },
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Chuyển nhanh giữa các phân quyền để trải nghiệm toàn bộ tính năng và báo cáo chuyên sâu:",
+                fontSize = 12.sp,
+                color = Color(0xFF64748B),
+                lineHeight = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Row of Tier buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                for (tier in AccountTier.entries) {
+                    val isSelected = currentTier == tier
+                    OutlinedCard(
+                        onClick = { onSelectTier(tier) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = if (isSelected) ProfessionalPrimary.copy(alpha = 0.08f) else Color(0xFFF8FAFC)
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = if (isSelected) 1.5.dp else 1.dp,
+                            color = if (isSelected) ProfessionalPrimary else Color(0xFFE2E8F0)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp, horizontal = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = tier.displayName,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) ProfessionalPrimary else Color(0xFF334155)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = when (tier) {
+                                    AccountTier.FREE -> "Cơ bản"
+                                    AccountTier.VIP -> "Cá nhân VIP"
+                                    AccountTier.BUSINESS -> "Doanh nghiệp"
+                                },
+                                fontSize = 10.sp,
+                                color = if (isSelected) ProfessionalPrimary else Color(0xFF94A3B8)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+            HorizontalDivider(color = Color(0xFFF1F5F9))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Reset Data Button (12/2025 - 08/2026)
+            OutlinedButton(
+                onClick = onResetData,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = ProfessionalPrimary
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ProfessionalPrimary.copy(alpha = 0.5f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Khôi phục dữ liệu mẫu đầy đủ (12/2025 - 08/2026)",
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }

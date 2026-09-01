@@ -32,6 +32,9 @@ interface InteractionDao {
     @Query("DELETE FROM interactions WHERE id = :id")
     suspend fun deleteInteractionById(id: Long)
 
+    @Query("DELETE FROM interactions")
+    suspend fun deleteAllInteractions()
+
     @Query("SELECT * FROM interactions ORDER BY date DESC LIMIT :limit")
     fun getRecentInteractions(limit: Int = 10): Flow<List<InteractionEntity>>
 }

@@ -32,6 +32,7 @@ import com.example.data.model.TaskEntity
 import com.example.data.model.TaskWithCustomer
 import com.example.data.model.UserProfile
 import com.example.data.repository.CrmRepository
+import com.example.data.repository.CrmSeedData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -582,213 +583,19 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     private val _notificationSettings = MutableStateFlow(NotificationSettings())
     val notificationSettings: StateFlow<NotificationSettings> = _notificationSettings.asStateFlow()
 
-    private val _securitySettings = MutableStateFlow(SecuritySettings())
+    private val _securitySettings = MutableStateFlow(userPreferences.getSecuritySettings())
     val securitySettings: StateFlow<SecuritySettings> = _securitySettings.asStateFlow()
 
-    // Quotes List matching design #bao_gia_tien_do.png
-    private val _quotes = MutableStateFlow<List<QuoteItem>>(
-        listOf(
-            QuoteItem(
-                id = 1,
-                quoteNumber = "BG-20231015-001",
-                title = "Acme Corp Website Redesign",
-                amount = 125000000.0,
-                dateStr = "15/10/2023",
-                status = "Draft",
-                customerName = "Acme Corporation",
-                category = "Thiết kế & Thi công",
-                notes = "Thiết kế lại toàn bộ website doanh nghiệp, chuẩn responsive"
-            ),
-            QuoteItem(
-                id = 2,
-                quoteNumber = "BG-20231020-004",
-                title = "TechSolutions Cloud Migration",
-                amount = 82000000.0,
-                dateStr = "20/10/2023",
-                status = "Draft",
-                customerName = "TechSolutions Inc",
-                category = "Dịch vụ & Bảo trì",
-                notes = "Di chuyển hạ tầng lên AWS Cloud"
-            ),
-            QuoteItem(
-                id = 3,
-                quoteNumber = "BG-20231012-002",
-                title = "GlobalReach Marketing Campaign",
-                amount = 45000000.0,
-                dateStr = "12/10/2023",
-                status = "Sent",
-                customerName = "GlobalReach Ltd",
-                category = "Tư vấn giải pháp",
-                notes = "Chiến dịch Digital Marketing Q4",
-                version = 1
-            ),
-            QuoteItem(
-                id = 4,
-                quoteNumber = "BG-20231008-003",
-                title = "Innova App Development",
-                amount = 320000000.0,
-                dateStr = "08/10/2023",
-                status = "Accepted",
-                customerName = "Innova Tech",
-                category = "Phần mềm & Bản quyền",
-                notes = "Phát triển app di động iOS và Android"
-            )
-        )
-    )
+    // Quotes List matching 12/2025 - 08/2026 data
+    private val _quotes = MutableStateFlow<List<QuoteItem>>(CrmSeedData.getSampleQuotes())
     val quotes: StateFlow<List<QuoteItem>> = _quotes.asStateFlow()
 
-    // Projects Progress matching design #tien_do_du_an.png
-    private val _projects = MutableStateFlow<List<ProjectProgressItem>>(
-        listOf(
-            ProjectProgressItem(
-                id = 1,
-                title = "Thi công nội thất Villa A",
-                customerName = "Nguyễn Văn B",
-                statusType = ProjectStatusType.ON_TRACK,
-                progressPercent = 66,
-                steps = listOf(
-                    ProjectStep(1, "Khảo sát & Đo đạc", StepStatus.COMPLETED, "Hoàn thành: 15/10/2023", customWeightPercent = 30),
-                    ProjectStep(2, "Thiết kế 3D", StepStatus.COMPLETED, "Hoàn thành: 28/10/2023", customWeightPercent = 35),
-                    ProjectStep(3, "Thi công lắp đặt", StepStatus.PENDING, "Deadline: 20/11/2023", customWeightPercent = 35)
-                )
-            ),
-            ProjectProgressItem(
-                id = 2,
-                title = "Cải tạo văn phòng TechCorp",
-                customerName = "TechCorp JSC",
-                statusType = ProjectStatusType.NEARING,
-                progressPercent = 33,
-                steps = listOf(
-                    ProjectStep(1, "Tháo dỡ hiện trạng", StepStatus.COMPLETED, "Hoàn thành: 01/11/2023"),
-                    ProjectStep(2, "Thi công điện nước", StepStatus.WARNING, "Deadline: Hôm nay", isHighlighted = true),
-                    ProjectStep(3, "Sơn bả & Hoàn thiện", StepStatus.PENDING, "Dự kiến: 15/11/2023")
-                )
-            ),
-            ProjectProgressItem(
-                id = 3,
-                title = "Showroom thời trang X",
-                customerName = "Lê Thị C",
-                statusType = ProjectStatusType.DELAYED,
-                progressPercent = 50,
-                warningNote = "Nguy cơ phạt hợp đồng",
-                steps = listOf(
-                    ProjectStep(1, "Thiết kế concept", StepStatus.COMPLETED, "Hoàn thành: 20/10/2023"),
-                    ProjectStep(2, "Sản xuất đồ gỗ nội thất", StepStatus.OVERDUE, "Quá hạn: 5 ngày (02/11/2023)", isHighlighted = true)
-                )
-            ),
-            ProjectProgressItem(
-                id = 4,
-                quoteId = 4,
-                title = "Innova App Development",
-                customerName = "Innova Tech",
-                statusType = ProjectStatusType.ON_TRACK,
-                progressPercent = 25,
-                steps = listOf(
-                    ProjectStep(1, "Phân tích yêu cầu & Thiết kế UI/UX", StepStatus.COMPLETED, "Hoàn thành: 15/10/2023"),
-                    ProjectStep(2, "Phát triển module chức năng cốt lõi", StepStatus.PENDING, "Deadline: 15/11/2023"),
-                    ProjectStep(3, "Kiểm thử chất lượng & UAT", StepStatus.PENDING, "Deadline: 30/11/2023"),
-                    ProjectStep(4, "Triển khai lên App Store / Google Play", StepStatus.PENDING, "Deadline: 15/12/2023")
-                )
-            )
-        )
-    )
+    // Projects Progress matching 12/2025 - 08/2026 data
+    private val _projects = MutableStateFlow<List<ProjectProgressItem>>(CrmSeedData.getSampleProjects())
     val projects: StateFlow<List<ProjectProgressItem>> = _projects.asStateFlow()
 
     // Employees list matching design & department/seniority requirements
-    private val _employees = MutableStateFlow<List<EmployeeItem>>(
-        listOf(
-            EmployeeItem(
-                id = 1,
-                name = "Nguyễn Thị An",
-                role = "Trưởng phòng Sales",
-                department = "Phòng Kinh doanh",
-                status = "Đang làm việc",
-                initials = "NA",
-                isWorking = true,
-                phone = "0908123456",
-                email = "an.nguyen@nexus.vn",
-                startDate = "10/02/2018",
-                baseSalary = 22000000.0,
-                allowance = 3000000.0,
-                kpiBonus = 5000000.0
-            ),
-            EmployeeItem(
-                id = 2,
-                name = "Trần Văn Bình",
-                role = "Nhân viên Kinh doanh",
-                department = "Phòng Kinh doanh",
-                status = "Đang làm việc",
-                initials = "TB",
-                isWorking = true,
-                phone = "0912345678",
-                email = "binh.tran@nexus.vn",
-                startDate = "15/06/2021",
-                baseSalary = 14000000.0,
-                allowance = 1500000.0,
-                kpiBonus = 3500000.0
-            ),
-            EmployeeItem(
-                id = 3,
-                name = "Lê Hoàng Nam",
-                role = "Chuyên viên Kỹ thuật",
-                department = "Phòng Kỹ thuật",
-                status = "Nghỉ phép",
-                initials = "LN",
-                isWorking = false,
-                phone = "0987654321",
-                email = "nam.le@nexus.vn",
-                startDate = "01/03/2023",
-                baseSalary = 16000000.0,
-                allowance = 2000000.0,
-                kpiBonus = 2000000.0
-            ),
-            EmployeeItem(
-                id = 4,
-                name = "Phạm Minh Đức",
-                role = "Kế toán tổng hợp",
-                department = "Phòng Kế toán",
-                status = "Đang làm việc",
-                initials = "MD",
-                isWorking = true,
-                phone = "0934567890",
-                email = "duc.pham@nexus.vn",
-                startDate = "20/08/2017",
-                baseSalary = 18000000.0,
-                allowance = 2000000.0,
-                kpiBonus = 3000000.0
-            ),
-            EmployeeItem(
-                id = 5,
-                name = "Hoàng Thị Mai",
-                role = "Chuyên viên Marketing",
-                department = "Phòng Marketing",
-                status = "Nghỉ việc",
-                initials = "HM",
-                isWorking = false,
-                phone = "0978901234",
-                email = "mai.hoang@nexus.vn",
-                startDate = "05/11/2022",
-                baseSalary = 13000000.0,
-                allowance = 1000000.0,
-                kpiBonus = 2000000.0
-            ),
-            EmployeeItem(
-                id = 6,
-                name = "Vũ Đình Tuấn",
-                role = "Nhân viên CSKH",
-                department = "Phòng Kinh doanh",
-                status = "Đang làm việc",
-                initials = "VT",
-                isWorking = true,
-                phone = "0945678901",
-                email = "tuan.vu@nexus.vn",
-                startDate = "12/01/2020",
-                baseSalary = 12000000.0,
-                allowance = 1200000.0,
-                kpiBonus = 2500000.0
-            )
-        )
-    )
+    private val _employees = MutableStateFlow<List<EmployeeItem>>(CrmSeedData.getSampleEmployees())
     val employees: StateFlow<List<EmployeeItem>> = _employees.asStateFlow()
 
     // Payroll Policy Settings (Chuẩn 8h/ngày, 26 ngày/tháng, OT theo giờ, Thâm niên 5 năm +1 ngày phép, Thưởng 5 năm & chu kỳ tiếp theo)
@@ -796,19 +603,7 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     val payrollPolicy: StateFlow<PayrollPolicySettings> = _payrollPolicy.asStateFlow()
 
     // Attendance Records (Bảng chấm công theo ngày)
-    private val _attendanceRecords = MutableStateFlow<List<AttendanceRecord>>(
-        listOf(
-            AttendanceRecord(1, 1, "2026-08-27", AttendanceType.FULL_WORK, 8.0f, 2.0f, OvertimeRateType.WEEKDAY, "Hỗ trợ chốt deal hợp đồng lớn"),
-            AttendanceRecord(2, 2, "2026-08-27", AttendanceType.FULL_WORK, 8.0f, 0.0f, OvertimeRateType.WEEKDAY, ""),
-            AttendanceRecord(3, 3, "2026-08-27", AttendanceType.FULL_LEAVE, 0.0f, 0.0f, OvertimeRateType.WEEKDAY, "Nghỉ phép có đơn xin"),
-            AttendanceRecord(4, 4, "2026-08-27", AttendanceType.FULL_WORK, 8.0f, 1.5f, OvertimeRateType.WEEKDAY, "Lập báo cáo tài chính tháng"),
-            AttendanceRecord(5, 6, "2026-08-27", AttendanceType.HALF_LEAVE, 4.0f, 0.0f, OvertimeRateType.WEEKDAY, "Nghỉ phép nửa buổi chiều"),
-            // Historical sample records for month calculations
-            AttendanceRecord(6, 1, "2026-08-26", AttendanceType.FULL_WORK, 8.0f, 3.0f, OvertimeRateType.WEEKDAY, "Tăng ca meeting khách hàng"),
-            AttendanceRecord(7, 2, "2026-08-26", AttendanceType.OVERTIME, 8.0f, 2.5f, OvertimeRateType.WEEKDAY, "OT xử lý báo giá"),
-            AttendanceRecord(8, 4, "2026-08-26", AttendanceType.FULL_WORK, 8.0f, 0.0f, OvertimeRateType.WEEKDAY, "")
-        )
-    )
+    private val _attendanceRecords = MutableStateFlow<List<AttendanceRecord>>(CrmSeedData.getSampleAttendance())
     val attendanceRecords: StateFlow<List<AttendanceRecord>> = _attendanceRecords.asStateFlow()
 
     // Actions for User, Auth & Settings
@@ -817,11 +612,17 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
         userPreferences.setLoggedIn(true)
         if (email.isNotBlank()) {
             val current = _userProfile.value
+            val savedProfile = userPreferences.getUserProfile()
             val updated = current.copy(
                 email = email.trim(),
                 fullName = if (name.isNotBlank()) name.trim() else current.fullName,
-                isVip = true, // Ensure default/logged in account is VIP per user request
-                role = "VIP ENTERPRISE"
+                isVip = savedProfile.accountTier.isVipOrHigher,
+                accountTier = savedProfile.accountTier,
+                role = when (savedProfile.accountTier) {
+                    com.example.data.model.AccountTier.FREE -> "FREE MEMBER"
+                    com.example.data.model.AccountTier.VIP -> "VIP MEMBER"
+                    com.example.data.model.AccountTier.BUSINESS -> "VIP ENTERPRISE"
+                }
             )
             _userProfile.value = updated
             userPreferences.saveUserProfile(updated)
@@ -848,17 +649,41 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
         userPreferences.saveUserProfile(profile)
     }
 
-    fun setVipStatus(isVip: Boolean) {
+    fun setAccountTier(tier: com.example.data.model.AccountTier) {
         val updated = _userProfile.value.copy(
-            isVip = isVip,
-            role = if (isVip) "VIP ENTERPRISE" else "ADMIN"
+            accountTier = tier,
+            isVip = tier.isVipOrHigher,
+            role = when (tier) {
+                com.example.data.model.AccountTier.FREE -> "FREE MEMBER"
+                com.example.data.model.AccountTier.VIP -> "VIP MEMBER"
+                com.example.data.model.AccountTier.BUSINESS -> "VIP ENTERPRISE"
+            }
         )
         _userProfile.value = updated
         userPreferences.saveUserProfile(updated)
     }
 
+    fun setVipStatus(isVip: Boolean) {
+        setAccountTier(if (isVip) com.example.data.model.AccountTier.VIP else com.example.data.model.AccountTier.FREE)
+    }
+
     fun toggleVipStatus() {
-        setVipStatus(!_userProfile.value.isVip)
+        val nextTier = when (_userProfile.value.accountTier) {
+            com.example.data.model.AccountTier.FREE -> com.example.data.model.AccountTier.VIP
+            com.example.data.model.AccountTier.VIP -> com.example.data.model.AccountTier.BUSINESS
+            com.example.data.model.AccountTier.BUSINESS -> com.example.data.model.AccountTier.FREE
+        }
+        setAccountTier(nextTier)
+    }
+
+    fun resetToComprehensiveSeedData() {
+        viewModelScope.launch {
+            repository.resetToComprehensiveSeedData()
+            _quotes.value = CrmSeedData.getSampleQuotes()
+            _projects.value = CrmSeedData.getSampleProjects()
+            _employees.value = CrmSeedData.getSampleEmployees()
+            _attendanceRecords.value = CrmSeedData.getSampleAttendance()
+        }
     }
 
     fun updateNotificationSettings(settings: NotificationSettings) {
@@ -867,6 +692,7 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateSecuritySettings(settings: SecuritySettings) {
         _securitySettings.value = settings
+        userPreferences.saveSecuritySettings(settings)
     }
 
     // Quote Actions

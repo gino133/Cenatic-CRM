@@ -2,6 +2,7 @@ package com.example.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.data.model.SecuritySettings
 import com.example.data.model.UserProfile
 import org.json.JSONArray
 import org.json.JSONObject
@@ -27,7 +28,10 @@ class UserPreferences(context: Context) {
         private const val KEY_ROLE = "role"
         private const val KEY_AVATAR_URL = "avatar_url"
         private const val KEY_IS_VIP = "is_vip"
+        private const val KEY_ACCOUNT_TIER = "account_tier"
         private const val KEY_REGISTERED_ACCOUNTS = "registered_accounts"
+        private const val KEY_2FA = "key_two_factor_auth"
+        private const val KEY_BIOMETRIC = "key_biometric_auth"
 
         // Default VIP profile values
         const val DEFAULT_NAME = "Quản Trị Viên VIP"
@@ -36,6 +40,20 @@ class UserPreferences(context: Context) {
         const val DEFAULT_DOB = "01/01/1990"
         const val DEFAULT_ADDRESS = "123 Đường Lê Lợi, Quận 1, TP.HCM"
         const val DEFAULT_ROLE = "VIP ENTERPRISE"
+    }
+
+    fun getSecuritySettings(): SecuritySettings {
+        return SecuritySettings(
+            twoFactorAuth = prefs.getBoolean(KEY_2FA, false),
+            biometricAuth = prefs.getBoolean(KEY_BIOMETRIC, false)
+        )
+    }
+
+    fun saveSecuritySettings(settings: SecuritySettings) {
+        prefs.edit()
+            .putBoolean(KEY_2FA, settings.twoFactorAuth)
+            .putBoolean(KEY_BIOMETRIC, settings.biometricAuth)
+            .apply()
     }
 
     fun isLoggedIn(): Boolean {
@@ -49,6 +67,15 @@ class UserPreferences(context: Context) {
     fun getUserProfile(): UserProfile {
         val rawPhone = prefs.getString(KEY_PHONE, DEFAULT_PHONE) ?: DEFAULT_PHONE
         val cleanPhone = if (rawPhone.startsWith("0")) rawPhone.dropWhile { it == '0' } else rawPhone
+        val isVip = prefs.getBoolean(KEY_IS_VIP, true) // Default is VIP per user request
+        val tierStr = prefs.getString(KEY_ACCOUNT_TIER, null)
+        val accountTier = when (tierStr) {
+            "FREE" -> com.example.data.model.AccountTier.FREE
+            "VIP" -> com.example.data.model.AccountTier.VIP
+            "BUSINESS" -> com.example.data.model.AccountTier.BUSINESS
+            else -> if (isVip) com.example.data.model.AccountTier.VIP else com.example.data.model.AccountTier.FREE
+        }
+
         return UserProfile(
             fullName = prefs.getString(KEY_FULL_NAME, DEFAULT_NAME) ?: DEFAULT_NAME,
             email = prefs.getString(KEY_EMAIL, DEFAULT_EMAIL) ?: DEFAULT_EMAIL,
@@ -57,7 +84,8 @@ class UserPreferences(context: Context) {
             address = prefs.getString(KEY_ADDRESS, DEFAULT_ADDRESS) ?: DEFAULT_ADDRESS,
             role = prefs.getString(KEY_ROLE, DEFAULT_ROLE) ?: DEFAULT_ROLE,
             avatarUrl = prefs.getString(KEY_AVATAR_URL, null),
-            isVip = prefs.getBoolean(KEY_IS_VIP, true) // Default is VIP per user request
+            isVip = accountTier.isVipOrHigher,
+            accountTier = accountTier
         )
     }
 
@@ -70,7 +98,8 @@ class UserPreferences(context: Context) {
             .putString(KEY_ADDRESS, profile.address)
             .putString(KEY_ROLE, profile.role)
             .putString(KEY_AVATAR_URL, profile.avatarUrl)
-            .putBoolean(KEY_IS_VIP, profile.isVip)
+            .putBoolean(KEY_IS_VIP, profile.accountTier.isVipOrHigher)
+            .putString(KEY_ACCOUNT_TIER, profile.accountTier.name)
             .apply()
     }
 
