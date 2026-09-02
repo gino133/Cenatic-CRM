@@ -1985,11 +1985,12 @@ fun UnifiedPerformanceKpiScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Nút 1: Đăng ký sử dụng (Kích hoạt ngay)
+                    // Nút 1: Đăng ký sử dụng (Chuyển đến trang mua gói tương ứng)
                     Button(
                         onClick = {
-                            viewModel.setAccountTier(lockedFeature.tier)
+                            val tierToOpen = lockedFeature.tier
                             showLockedFeatureDialog = null
+                            onNavigateToUpgrade(tierToOpen)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2001,7 +2002,11 @@ fun UnifiedPerformanceKpiScreen(
                     ) {
                         Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Đăng ký sử dụng", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                        Text(
+                            text = if (lockedFeature.tier == AccountTier.VIP) "Đăng ký sử dụng gói VIP" else "Đăng ký sử dụng gói BUSINESS",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp
+                        )
                     }
 
                     // Nút 2: Xem gói (Chuyển sang trang xem gói tương ứng)
@@ -2026,18 +2031,23 @@ fun UnifiedPerformanceKpiScreen(
                         Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (lockedFeature.tier == AccountTier.VIP) "Xem gói VIP" else "Xem gói BUSINESS",
+                            text = if (lockedFeature.tier == AccountTier.VIP) "Xem chi tiết gói VIP" else "Xem chi tiết gói BUSINESS",
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.5.sp
                         )
                     }
 
                     // Nút 3: Đóng
-                    TextButton(
+                    OutlinedButton(
                         onClick = { showLockedFeatureDialog = null },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B)),
+                        border = BorderStroke(1.dp, Color(0xFFCBD5E1))
                     ) {
-                        Text("Đóng", color = Color(0xFF64748B), fontSize = 13.sp)
+                        Text("Đóng", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                     }
                 }
             },
@@ -2184,15 +2194,9 @@ fun LockedFeaturePaywallScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Nút 1: Đăng ký sử dụng (Kích hoạt ngay)
+            // Nút 1: Đăng ký sử dụng (Chuyển đến trang mua gói tương ứng)
             Button(
-                onClick = {
-                    if (viewModel != null) {
-                        viewModel.setAccountTier(requiredTier)
-                    } else {
-                        onRegisterDirect?.invoke()
-                    }
-                },
+                onClick = { onNavigateToUpgrade(requiredTier) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

@@ -6,8 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
 import com.example.data.local.LocalAccount
 import com.example.data.local.UserPreferences
+import com.example.data.model.AnnexItem
 import com.example.data.model.AttendanceRecord
 import com.example.data.model.AttendanceType
+import com.example.data.model.ContractAnnex
+import com.example.data.model.ContractItem
+import com.example.data.model.ContractNamingRule
+import com.example.data.model.ContractStatus
 import com.example.data.model.CustomerEntity
 import com.example.data.model.CustomerStatus
 import com.example.data.model.CustomerTypeEntity
@@ -590,6 +595,13 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     private val _quotes = MutableStateFlow<List<QuoteItem>>(CrmSeedData.getSampleQuotes())
     val quotes: StateFlow<List<QuoteItem>> = _quotes.asStateFlow()
 
+    // Contracts List & Naming Rule
+    private val _contracts = MutableStateFlow<List<ContractItem>>(CrmSeedData.getSampleContracts())
+    val contracts: StateFlow<List<ContractItem>> = _contracts.asStateFlow()
+
+    private val _contractNamingRule = MutableStateFlow(CrmSeedData.getContractNamingRule())
+    val contractNamingRule: StateFlow<ContractNamingRule> = _contractNamingRule.asStateFlow()
+
     // Projects Progress matching 12/2025 - 08/2026 data
     private val _projects = MutableStateFlow<List<ProjectProgressItem>>(CrmSeedData.getSampleProjects())
     val projects: StateFlow<List<ProjectProgressItem>> = _projects.asStateFlow()
@@ -681,6 +693,8 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 repository.resetToComprehensiveSeedData()
                 _quotes.value = CrmSeedData.getSampleQuotes()
+                _contracts.value = CrmSeedData.getSampleContracts()
+                _contractNamingRule.value = CrmSeedData.getContractNamingRule()
                 _projects.value = CrmSeedData.getSampleProjects()
                 _employees.value = CrmSeedData.getSampleEmployees()
                 _attendanceRecords.value = CrmSeedData.getSampleAttendance()
@@ -698,6 +712,72 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     fun updateSecuritySettings(settings: SecuritySettings) {
         _securitySettings.value = settings
         userPreferences.saveSecuritySettings(settings)
+    }
+
+    fun updateContractNamingRule(rule: ContractNamingRule) {
+        _contractNamingRule.value = rule
+    }
+
+    // Contract Actions
+    fun addContract(contract: ContractItem) {
+        val newId = if (contract.id != 0L) contract.id else System.currentTimeMillis()
+        val item = contract.copy(id = newId)
+        _contracts.value = listOf(item) + _contracts.value
+    }
+
+    fun updateContract(contract: ContractItem) {
+        _contracts.value = _contracts.value.map {
+            if (it.id == contract.id) contract else it
+        }
+    }
+
+    fun deleteContract(id: Long) {
+        _contracts.value = _contracts.value.filter { it.id != id }
+    }
+
+    fun signContract(contractId: Long) {
+        var signedContract: ContractItem? = null
+        _contracts.value = _contracts.value.map { contract ->
+            if (contract.id == contractId) {
+                val updated = contract.copy(status = ContractStatus.SIGNED)
+                signedContract = updated
+                updated
+            } else contract
+        }
+        signedContract?.let { c ->
+            // Ensure project step 1 is marked completed
+            val existingProject = _projects.value.find { it.quoteId == c.quoteId || (it.title == c.title && it.customerName == c.customerName) }
+            if (existingProject != null) {
+                val updatedSteps = existingProject.steps.mapIndexed { idx, s ->
+                    if (idx == 0) s.copy(status = StepStatus.COMPLETED, dateLabel = "Hoàn thành: ${c.signedDate}") else s
+                }
+                val updatedProj = existingProject.copy(steps = updatedSteps)
+                val calc = updatedProj.calculateCalculatedProgress()
+                _projects.value = _projects.value.map { if (it.id == updatedProj.id) updatedProj.copy(progressPercent = calc) else it }
+            } else {
+                createProjectFromContract(c)
+            }
+        }
+    }
+
+    fun addContractAnnex(contractId: Long, annex: ContractAnnex) {
+        _contracts.value = _contracts.value.map { contract ->
+            if (contract.id == contractId) {
+                val newAnnexId = if (annex.id != 0L) annex.id else System.currentTimeMillis()
+                val finalAnnex = annex.copy(id = newAnnexId, contractId = contractId)
+                val updatedAnnexes = contract.annexes + finalAnnex
+                contract.copy(annexes = updatedAnnexes)
+            } else contract
+        }
+    }
+
+    fun deleteContractAnnex(contractId: Long, annexId: Long) {
+        _contracts.value = _contracts.value.map { contract ->
+            if (contract.id == contractId) {
+                val updatedAnnexes = contract.annexes.filter { it.id != annexId }
+                contract.copy(annexes = updatedAnnexes)
+            } else contract
+        }
     }
 
     // Quote Actions
@@ -763,6 +843,92 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
         acceptedQuote?.let { createProjectFromQuote(it) }
     }
 
+    fun acceptQuoteWithOption(quoteId: Long, isSignContract: Boolean): Pair<QuoteItem?, ContractItem?> {
+        var acceptedQuote: QuoteItem? = null
+        var createdContract: ContractItem? = null
+
+        val todayStr = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+
+        val targetQuote = _quotes.value.find { it.id == quoteId } ?: return Pair(null, null)
+
+        if (isSignContract) {
+            val nextContractNum = _contractNamingRule.value.generateNextContractNumber(_contracts.value)
+            val newContract = ContractItem(
+                id = System.currentTimeMillis(),
+                quoteId = targetQuote.id,
+                contractNumber = nextContractNum,
+                title = "Hợp đồng: ${targetQuote.title}",
+                customerName = targetQuote.customerName,
+                customerId = targetQuote.customerId,
+                originalAmount = targetQuote.amount,
+                signedDate = todayStr,
+                status = ContractStatus.DRAFT,
+                notes = "Hợp đồng chuyển từ Báo giá ${targetQuote.quoteNumber}"
+            )
+            createdContract = newContract
+            _contracts.value = listOf(newContract) + _contracts.value
+
+            _quotes.value = _quotes.value.map { quote ->
+                if (quote.id == quoteId) {
+                    val updated = quote.copy(
+                        status = "Accepted",
+                        contractId = newContract.id,
+                        contractNumber = newContract.contractNumber
+                    )
+                    acceptedQuote = updated
+                    updated
+                } else quote
+            }
+            createProjectFromQuote(targetQuote)
+        } else {
+            _quotes.value = _quotes.value.map { quote ->
+                if (quote.id == quoteId) {
+                    val updated = quote.copy(status = "Accepted")
+                    acceptedQuote = updated
+                    updated
+                } else quote
+            }
+            acceptedQuote?.let { createProjectFromQuote(it) }
+        }
+
+        return Pair(acceptedQuote, createdContract)
+    }
+
+    fun updateContractTerms(contractId: Long, payment: String, delivery: String, warranty: String, notes: String) {
+        _contracts.value = _contracts.value.map { contract ->
+            if (contract.id == contractId) {
+                contract.copy(
+                    paymentTerms = payment,
+                    deliveryTerms = delivery,
+                    warrantyTerms = warranty,
+                    notes = notes
+                )
+            } else contract
+        }
+    }
+
+    private fun createProjectFromContract(contract: ContractItem) {
+        val existing = _projects.value.find { it.quoteId == contract.quoteId || (it.title == contract.title && it.customerName == contract.customerName) }
+        if (existing == null) {
+            val newProject = ProjectProgressItem(
+                id = System.currentTimeMillis(),
+                quoteId = contract.quoteId,
+                title = contract.title,
+                customerName = contract.customerName.ifBlank { "Khách hàng" },
+                statusType = ProjectStatusType.ON_TRACK,
+                progressPercent = 0,
+                steps = listOf(
+                    ProjectStep(1, "Ký kết hợp đồng & Đặt cọc", StepStatus.COMPLETED, "Hoàn thành: ${contract.signedDate}"),
+                    ProjectStep(2, "Khảo sát / Tiếp nhận yêu cầu", StepStatus.PENDING, "Dự kiến: 7 ngày tới"),
+                    ProjectStep(3, "Triển khai thực hiện", StepStatus.PENDING, "Dự kiến: 20 ngày tới"),
+                    ProjectStep(4, "Nghiệm thu & Bàn giao", StepStatus.PENDING, "Dự kiến: 30 ngày tới")
+                )
+            )
+            val calculated = newProject.calculateCalculatedProgress()
+            _projects.value = listOf(newProject.copy(progressPercent = calculated)) + _projects.value
+        }
+    }
+
     private fun createProjectFromQuote(quote: QuoteItem) {
         val existing = _projects.value.find { it.quoteId == quote.id || (it.title == quote.title && it.customerName == quote.customerName) }
         if (existing == null) {
@@ -801,6 +967,32 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
                 updatedProject.copy(progressPercent = newProgress, statusType = newStatusType)
             } else project
         }
+    }
+
+    fun updateProjectStep(projectId: Long, updatedStep: ProjectStep) {
+        _projects.value = _projects.value.map { project ->
+            if (project.id == projectId) {
+                val updatedSteps = project.steps.map { step ->
+                    if (step.id == updatedStep.id) updatedStep else step
+                }
+                val updatedProject = project.copy(steps = updatedSteps)
+                val newProgress = updatedProject.calculateCalculatedProgress()
+                val newStatusType = if (newProgress == 100) ProjectStatusType.ON_TRACK else project.statusType
+                updatedProject.copy(progressPercent = newProgress, statusType = newStatusType)
+            } else project
+        }
+    }
+
+    fun updateProjectStep(projectId: Long, stepId: Long, title: String, deadline: String, customWeight: Int?) {
+        val targetProject = _projects.value.find { it.id == projectId } ?: return
+        val currentStep = targetProject.steps.find { it.id == stepId } ?: return
+        val dateText = if (deadline.startsWith("Deadline") || deadline.startsWith("Dự kiến")) deadline else "Deadline: $deadline"
+        val updatedStep = currentStep.copy(
+            title = title,
+            dateLabel = dateText,
+            customWeightPercent = customWeight
+        )
+        updateProjectStep(projectId, updatedStep)
     }
 
     fun updateProjectStepWeight(projectId: Long, stepId: Long, customWeight: Int?) {

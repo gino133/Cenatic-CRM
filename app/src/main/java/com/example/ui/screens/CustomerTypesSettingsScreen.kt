@@ -234,9 +234,9 @@ fun CustomerTypesSettingsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Nút 1: Đăng ký sử dụng (Kích hoạt trực tiếp)
+                // Nút 1: Đăng ký sử dụng (Chuyển đến trang mua gói VIP)
                 Button(
-                    onClick = { viewModel.setAccountTier(AccountTier.VIP) },
+                    onClick = { onNavigateToUpgrade?.invoke() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -250,12 +250,12 @@ fun CustomerTypesSettingsScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Nút 2: Xem gói
+                // Nút 2: Xem chi tiết gói VIP
                 OutlinedButton(
                     onClick = { onNavigateToUpgrade?.invoke() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD97706)),
                     border = BorderStroke(1.dp, Color(0xFFD97706))
@@ -267,14 +267,17 @@ fun CustomerTypesSettingsScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // Nút 3: Quay lại
                 OutlinedButton(
                     onClick = onBack,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B)),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
                 ) {
-                    Text("Quay lại Cài đặt", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold)
+                    Text("Quay lại Cài đặt", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                 }
             }
         }

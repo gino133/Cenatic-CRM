@@ -317,6 +317,10 @@ fun MainScreen(viewModel: CrmViewModel) {
             EmployeeManagementScreen(
                 viewModel = viewModel,
                 onBack = { fullScreenMode = FullScreenMode.NONE },
+                onNavigateToUpgrade = {
+                    upgradeTargetTier = AccountTier.BUSINESS
+                    fullScreenMode = FullScreenMode.UPGRADE
+                },
                 onNavigateToTimekeeping = { fullScreenMode = FullScreenMode.TIMEKEEPING },
                 onNavigateToPayroll = { fullScreenMode = FullScreenMode.PAYROLL },
                 onNavigateToSenioritySettings = { fullScreenMode = FullScreenMode.SENIORITY_SETTINGS }
@@ -361,7 +365,11 @@ fun MainScreen(viewModel: CrmViewModel) {
         FullScreenMode.NOTIFICATIONS -> {
             NotificationSettingsScreen(
                 viewModel = viewModel,
-                onBack = { fullScreenMode = FullScreenMode.NONE }
+                onBack = { fullScreenMode = FullScreenMode.NONE },
+                onNavigateToUpgrade = { tier ->
+                    upgradeTargetTier = tier
+                    fullScreenMode = FullScreenMode.UPGRADE
+                }
             )
             return
         }
@@ -644,7 +652,7 @@ fun MainScreen(viewModel: CrmViewModel) {
                                 fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
                             },
                             onNavigateToProjects = {
-                                quotesInitialTab = 1
+                                quotesInitialTab = 2
                                 fullScreenMode = FullScreenMode.QUOTES_AND_PROJECTS
                             },
                             onNavigateToTasks = { currentNavIndex = 2 },

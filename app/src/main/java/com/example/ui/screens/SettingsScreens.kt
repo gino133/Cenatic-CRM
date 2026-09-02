@@ -78,10 +78,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -668,38 +671,49 @@ fun SettingsHubScreen(
                 ) {
                     Button(
                         onClick = {
-                            viewModel.setAccountTier(AccountTier.VIP)
                             showVipUpgradeDialog = null
+                            onNavigateToUpgrade(AccountTier.VIP)
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(10.dp)
                     ) {
                         Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Đăng ký sử dụng gói VIP", fontWeight = FontWeight.Bold)
+                        Text("Đăng ký sử dụng gói VIP", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                     }
                     OutlinedButton(
                         onClick = {
                             showVipUpgradeDialog = null
                             onNavigateToUpgrade(AccountTier.VIP)
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD97706)),
                         border = BorderStroke(1.dp, Color(0xFFD97706))
                     ) {
                         Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Xem gói VIP", fontWeight = FontWeight.Bold)
+                        Text("Xem chi tiết gói VIP", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                    }
+                    OutlinedButton(
+                        onClick = { showVipUpgradeDialog = null },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B)),
+                        border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                    ) {
+                        Text("Đóng", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                     }
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { showVipUpgradeDialog = null }) {
-                    Text("Đóng", color = Color(0xFF64748B))
-                }
-            }
+            dismissButton = null
         )
     }
 
@@ -770,38 +784,49 @@ fun SettingsHubScreen(
                 ) {
                     Button(
                         onClick = {
-                            viewModel.setAccountTier(AccountTier.BUSINESS)
                             showBusinessUpgradeDialog = null
+                            onNavigateToUpgrade(AccountTier.BUSINESS)
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(10.dp)
                     ) {
                         Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Đăng ký sử dụng gói BUSINESS", fontWeight = FontWeight.Bold)
+                        Text("Đăng ký sử dụng gói BUSINESS", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                     }
                     OutlinedButton(
                         onClick = {
                             showBusinessUpgradeDialog = null
                             onNavigateToUpgrade(AccountTier.BUSINESS)
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF7C3AED)),
                         border = BorderStroke(1.dp, Color(0xFF7C3AED))
                     ) {
                         Icon(imageVector = Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Xem gói BUSINESS", fontWeight = FontWeight.Bold)
+                        Text("Xem chi tiết gói BUSINESS", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                    }
+                    OutlinedButton(
+                        onClick = { showBusinessUpgradeDialog = null },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B)),
+                        border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                    ) {
+                        Text("Đóng", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                     }
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { showBusinessUpgradeDialog = null }) {
-                    Text("Đóng", color = Color(0xFF64748B))
-                }
-            }
+            dismissButton = null
         )
     }
 }
@@ -842,7 +867,8 @@ fun SettingsMainHost(
         )
         SettingsSubScreen.NOTIFICATIONS -> NotificationSettingsScreen(
             viewModel = viewModel,
-            onBack = { currentSubScreen = SettingsSubScreen.MAIN }
+            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+            onNavigateToUpgrade = { tier -> upgradeAction(tier) }
         )
         SettingsSubScreen.SECURITY -> SecurityScreen(
             viewModel = viewModel,
@@ -2201,12 +2227,12 @@ fun EmployeeManagementScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Nút 1: Đăng ký sử dụng (Kích hoạt trực tiếp)
+                // Nút 1: Đăng ký sử dụng (Chuyển đến trang mua gói BUSINESS)
                 Button(
-                    onClick = { viewModel.setAccountTier(AccountTier.BUSINESS) },
+                    onClick = onNavigateToUpgrade,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF7C3AED)
@@ -2229,12 +2255,12 @@ fun EmployeeManagementScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Nút 2: Xem gói
+                // Nút 2: Xem chi tiết gói BUSINESS
                 OutlinedButton(
                     onClick = onNavigateToUpgrade,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF7C3AED)),
                     border = BorderStroke(1.dp, Color(0xFF7C3AED))
@@ -2246,14 +2272,17 @@ fun EmployeeManagementScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // Nút 3: Quay lại
                 OutlinedButton(
                     onClick = onBack,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B)),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
                 ) {
-                    Text("Quay lại Cài đặt", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold)
+                    Text("Quay lại Cài đặt", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                 }
             }
         } else {
@@ -5538,27 +5567,24 @@ fun SeniorityPolicySettingsScreen(
 @Composable
 fun NotificationSettingsScreen(
     viewModel: CrmViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToUpgrade: (AccountTier) -> Unit = {}
 ) {
     val settings by viewModel.notificationSettings.collectAsStateWithLifecycle()
+    val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+    val isVipUnlocked = userProfile.accountTier.isVipOrHigher
+    val isBusinessUnlocked = userProfile.accountTier == AccountTier.BUSINESS
+
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var enableSound by remember { mutableStateOf(true) }
-    var enableVibrate by remember { mutableStateOf(true) }
-    var enableSmsAlert by remember { mutableStateOf(false) }
-    var enableQuietHours by remember { mutableStateOf(false) }
-    var quietHourStart by remember { mutableStateOf("22:00") }
-    var quietHourEnd by remember { mutableStateOf("07:00") }
-    var allowVipOverride by remember { mutableStateOf(true) }
-
-    // Detailed notification categories
-    var notifyDealWon by remember { mutableStateOf(true) }
-    var notifyQuoteApproved by remember { mutableStateOf(true) }
-    var notifyPaymentDue by remember { mutableStateOf(true) }
-    var notifyEmployeeAttendance by remember { mutableStateOf(false) }
-
+    var showVipUpgradeDialog by remember { mutableStateOf<String?>(null) }
+    var showBusinessUpgradeDialog by remember { mutableStateOf<String?>(null) }
     var isSendingTestNotif by remember { mutableStateOf(false) }
+
+    // State for day/month picker dropdowns
+    var showDayDropdown by remember { mutableStateOf(false) }
+    var showMonthDropdown by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -5611,14 +5637,17 @@ fun NotificationSettingsScreen(
                     }
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Hệ thống thông báo đang hoạt động",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E3A8A)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Hệ thống thông báo đang hoạt động",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E3A8A)
-                        )
-                        Text(
-                            text = "Nhận thông báo công việc, lịch hẹn & báo giá tức thì",
+                            text = "Gói hiện tại: ${userProfile.accountTier.displayName} • Cấu hình nhận thông tin real-time",
                             fontSize = 12.sp,
                             color = Color(0xFF3B82F6)
                         )
@@ -5628,7 +5657,7 @@ fun NotificationSettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ================= 1. KÊNH THÔNG BÁO =================
+            // ================= 1. KÊNH NHẬN THÔNG BÁO =================
             SettingsGroupHeader("KÊNH NHẬN THÔNG BÁO")
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -5647,30 +5676,614 @@ fun NotificationSettingsScreen(
                     ToggleSettingItem(
                         title = "Âm thanh chuông báo",
                         subtitle = "Phát âm thanh khi có tin nhắn & thông báo mới",
-                        checked = enableSound,
-                        onCheckedChange = { enableSound = it }
+                        checked = settings.soundEnabled,
+                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(soundEnabled = it)) }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
                     ToggleSettingItem(
                         title = "Rung phản hồi",
                         subtitle = "Rung thiết bị khi nhận thông báo quan trọng",
-                        checked = enableVibrate,
-                        onCheckedChange = { enableVibrate = it }
+                        checked = settings.vibrateEnabled,
+                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(vibrateEnabled = it)) }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Email tổng kết và báo cáo [VIP]
                     ToggleSettingItem(
                         title = "Email tổng kết & Báo cáo",
-                        subtitle = "Nhận tóm tắt hiệu suất hàng tuần vào thứ Hai",
+                        subtitle = "Tùy chọn ngày nhận theo tuần, tháng, quý, 6 tháng, năm tài chính",
                         checked = settings.weeklyReportEmail,
-                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(weeklyReportEmail = it)) }
+                        onCheckedChange = { isChecked ->
+                            if (isVipUnlocked) {
+                                viewModel.updateNotificationSettings(settings.copy(weeklyReportEmail = isChecked))
+                            } else {
+                                showVipUpgradeDialog = "Email tổng kết và báo cáo"
+                            }
+                        },
+                        badge = if (isVipUnlocked) "VIP" else "VIP (Khóa)",
+                        badgeBg = if (isVipUnlocked) Color(0xFFFEF3C7) else Color(0xFFFEE2E2),
+                        badgeColor = if (isVipUnlocked) Color(0xFFB45309) else Color(0xFFDC2626),
+                        enabled = isVipUnlocked,
+                        onClickLocked = { showVipUpgradeDialog = "Email tổng kết và báo cáo" }
                     )
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
-                    ToggleSettingItem(
-                        title = "Tin nhắn SMS / Zalo ZNS khẩn cấp",
-                        subtitle = "Chỉ gửi khi có lịch hẹn quan trọng trong 1 giờ tới",
-                        checked = enableSmsAlert,
-                        onCheckedChange = { enableSmsAlert = it }
-                    )
+
+                    // Expanded Fiscal Year & Report Scheduler Card
+                    if (isVipUnlocked && settings.weeklyReportEmail) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFFF8FAFC))
+                                .padding(16.dp)
+                        ) {
+                            val schedule = settings.emailReportSchedule
+
+                            // Section A: Fiscal Year Configuration
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarMonth,
+                                            contentDescription = null,
+                                            tint = ProfessionalPrimary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "THIẾT LẬP NĂM TÀI CHÍNH (FISCAL YEAR)",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF0F172A)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Ngày kết thúc tự động tính là ngày trước ngày bắt đầu năm tiếp theo 1 ngày.",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    // Pickers for Start Day & Start Month
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        // Start Day Picker Box
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            OutlinedButton(
+                                                onClick = { showDayDropdown = true },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(8.dp),
+                                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFF8FAFC)),
+                                                border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                            ) {
+                                                Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
+                                                    Text("Ngày bắt đầu", fontSize = 10.sp, color = Color(0xFF64748B))
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Text("Ngày ${schedule.fiscalStartDay}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                                        Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                    }
+                                                }
+                                            }
+                                            DropdownMenu(
+                                                expanded = showDayDropdown,
+                                                onDismissRequest = { showDayDropdown = false }
+                                            ) {
+                                                (1..31).forEach { day ->
+                                                    DropdownMenuItem(
+                                                        text = { Text("Ngày $day") },
+                                                        onClick = {
+                                                            viewModel.updateNotificationSettings(
+                                                                settings.copy(emailReportSchedule = schedule.copy(fiscalStartDay = day))
+                                                            )
+                                                            showDayDropdown = false
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        // Start Month Picker Box
+                                        Box(modifier = Modifier.weight(1.2f)) {
+                                            OutlinedButton(
+                                                onClick = { showMonthDropdown = true },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                shape = RoundedCornerShape(8.dp),
+                                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFFF8FAFC)),
+                                                border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                            ) {
+                                                Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
+                                                    Text("Tháng bắt đầu", fontSize = 10.sp, color = Color(0xFF64748B))
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Text("Tháng ${schedule.fiscalStartMonth}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                                        Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                    }
+                                                }
+                                            }
+                                            DropdownMenu(
+                                                expanded = showMonthDropdown,
+                                                onDismissRequest = { showMonthDropdown = false }
+                                            ) {
+                                                (1..12).forEach { month ->
+                                                    DropdownMenuItem(
+                                                        text = { Text("Tháng $month") },
+                                                        onClick = {
+                                                            viewModel.updateNotificationSettings(
+                                                                settings.copy(emailReportSchedule = schedule.copy(fiscalStartMonth = month))
+                                                            )
+                                                            showMonthDropdown = false
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Fiscal calculation display banner
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color(0xFFEFF6FF),
+                                        border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = schedule.getFiscalYearLabel(2026),
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = Color(0xFF1E40AF)
+                                                )
+                                                Surface(
+                                                    shape = RoundedCornerShape(6.dp),
+                                                    color = if (schedule.fiscalStartDay == 1 && schedule.fiscalStartMonth == 1) Color(0xFFDBEAFE) else Color(0xFFF1F5F9),
+                                                    border = BorderStroke(1.dp, if (schedule.fiscalStartDay == 1 && schedule.fiscalStartMonth == 1) Color(0xFF93C5FD) else Color(0xFFCBD5E1)),
+                                                    modifier = Modifier.clickable {
+                                                        viewModel.updateNotificationSettings(
+                                                            settings.copy(
+                                                                emailReportSchedule = schedule.copy(
+                                                                    fiscalStartDay = 1,
+                                                                    fiscalStartMonth = 1
+                                                                )
+                                                            )
+                                                        )
+                                                    }
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = "Đặt lại chu kỳ chuẩn",
+                                                            tint = if (schedule.fiscalStartDay == 1 && schedule.fiscalStartMonth == 1) Color(0xFF1D4ED8) else Color(0xFF475569),
+                                                            modifier = Modifier.size(12.dp)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text(
+                                                            text = "Chu kỳ chuẩn",
+                                                            fontSize = 10.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (schedule.fiscalStartDay == 1 && schedule.fiscalStartMonth == 1) Color(0xFF1D4ED8) else Color(0xFF475569)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "Thời gian: ${schedule.getFiscalYearRangeString(2026)}",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFF1E3A8A)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Section B: Report Frequencies (Multi-select options)
+                            Text(
+                                text = "TÙY CHỌN NGÀY NHẬN BÁO CÁO (CHỌN NHIỀU TÙY CHỌN)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF475569)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // 1. Weekly Report
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("1. Báo cáo theo tuần", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                            Text("Chọn 1 ngày cố định trong tuần để nhận báo cáo", fontSize = 11.sp, color = Color(0xFF64748B))
+                                        }
+                                        Switch(
+                                            checked = schedule.enableWeeklyReport,
+                                            onCheckedChange = { isChecked ->
+                                                viewModel.updateNotificationSettings(
+                                                    settings.copy(emailReportSchedule = schedule.copy(enableWeeklyReport = isChecked))
+                                                )
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.White,
+                                                checkedTrackColor = ProfessionalPrimary
+                                            )
+                                        )
+                                    }
+
+                                    if (schedule.enableWeeklyReport) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("Chọn ngày nhận trong tuần (chọn 1 ngày):", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Color(0xFF475569))
+                                        Spacer(modifier = Modifier.height(6.dp))
+
+                                        val daysList = listOf(
+                                            2 to "Thứ 2",
+                                            3 to "Thứ 3",
+                                            4 to "Thứ 4",
+                                            5 to "Thứ 5",
+                                            6 to "Thứ 6",
+                                            7 to "Thứ 7",
+                                            1 to "Chủ Nhật"
+                                        )
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            daysList.forEach { (dayCode, dayLabel) ->
+                                                val isSelected = schedule.weeklyDays.contains(dayCode)
+                                                Surface(
+                                                    shape = RoundedCornerShape(6.dp),
+                                                    color = if (isSelected) ProfessionalPrimary else Color(0xFFF1F5F9),
+                                                    border = BorderStroke(1.dp, if (isSelected) ProfessionalPrimary else Color(0xFFE2E8F0)),
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .clickable {
+                                                            viewModel.updateNotificationSettings(
+                                                                settings.copy(emailReportSchedule = schedule.copy(weeklyDays = setOf(dayCode)))
+                                                            )
+                                                        }
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier.padding(vertical = 8.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(
+                                                            text = dayLabel,
+                                                            fontSize = 10.sp,
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                            color = if (isSelected) Color.White else Color(0xFF475569),
+                                                            maxLines = 1
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // 2. Monthly Report
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("2. Báo cáo theo tháng tài chính", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                            Text("Tổng hợp hiệu suất tháng tài chính", fontSize = 11.sp, color = Color(0xFF64748B))
+                                        }
+                                        Switch(
+                                            checked = schedule.enableMonthlyReport,
+                                            onCheckedChange = { isChecked ->
+                                                viewModel.updateNotificationSettings(
+                                                    settings.copy(emailReportSchedule = schedule.copy(enableMonthlyReport = isChecked))
+                                                )
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.White,
+                                                checkedTrackColor = ProfessionalPrimary
+                                            )
+                                        )
+                                    }
+
+                                    if (schedule.enableMonthlyReport) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            FilterChip(
+                                                selected = schedule.monthlyStart,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(monthlyStart = !schedule.monthlyStart))
+                                                    )
+                                                },
+                                                label = { Text("Ngày đầu tháng", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            FilterChip(
+                                                selected = schedule.monthlyEnd,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(monthlyEnd = !schedule.monthlyEnd))
+                                                    )
+                                                },
+                                                label = { Text("Ngày cuối tháng", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // 3. Quarterly Report
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("3. Báo cáo theo quý tài chính (Q1 - Q4)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                            Text("Tổng hợp hiệu suất mỗi 3 tháng tài chính", fontSize = 11.sp, color = Color(0xFF64748B))
+                                        }
+                                        Switch(
+                                            checked = schedule.enableQuarterlyReport,
+                                            onCheckedChange = { isChecked ->
+                                                viewModel.updateNotificationSettings(
+                                                    settings.copy(emailReportSchedule = schedule.copy(enableQuarterlyReport = isChecked))
+                                                )
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.White,
+                                                checkedTrackColor = ProfessionalPrimary
+                                            )
+                                        )
+                                    }
+
+                                    if (schedule.enableQuarterlyReport) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            FilterChip(
+                                                selected = schedule.quarterlyStart,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(quarterlyStart = !schedule.quarterlyStart))
+                                                    )
+                                                },
+                                                label = { Text("Ngày đầu mỗi quý", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            FilterChip(
+                                                selected = schedule.quarterlyEnd,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(quarterlyEnd = !schedule.quarterlyEnd))
+                                                    )
+                                                },
+                                                label = { Text("Ngày cuối mỗi quý", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // 4. Semi-Annual (6 months / Giữa năm) Report
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("4. Báo cáo bán niên (6 tháng / Giữa năm)", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                            Text("Tổng hợp hiệu suất nửa năm tài chính", fontSize = 11.sp, color = Color(0xFF64748B))
+                                        }
+                                        Switch(
+                                            checked = schedule.enableSemiAnnualReport,
+                                            onCheckedChange = { isChecked ->
+                                                viewModel.updateNotificationSettings(
+                                                    settings.copy(emailReportSchedule = schedule.copy(enableSemiAnnualReport = isChecked))
+                                                )
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.White,
+                                                checkedTrackColor = ProfessionalPrimary
+                                            )
+                                        )
+                                    }
+
+                                    if (schedule.enableSemiAnnualReport) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            FilterChip(
+                                                selected = schedule.semiAnnualStart,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(semiAnnualStart = !schedule.semiAnnualStart))
+                                                    )
+                                                },
+                                                label = { Text("Ngày đầu kỳ 6 tháng", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            FilterChip(
+                                                selected = schedule.semiAnnualEnd,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(semiAnnualEnd = !schedule.semiAnnualEnd))
+                                                    )
+                                                },
+                                                label = { Text("Ngày cuối kỳ 6 tháng", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // 5. Annual (Năm tài chính) Report
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text("5. Báo cáo năm tài chính", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0F172A))
+                                            Text("Báo cáo tổng kết toàn diện cuối năm tài chính", fontSize = 11.sp, color = Color(0xFF64748B))
+                                        }
+                                        Switch(
+                                            checked = schedule.enableAnnualReport,
+                                            onCheckedChange = { isChecked ->
+                                                viewModel.updateNotificationSettings(
+                                                    settings.copy(emailReportSchedule = schedule.copy(enableAnnualReport = isChecked))
+                                                )
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.White,
+                                                checkedTrackColor = ProfessionalPrimary
+                                            )
+                                        )
+                                    }
+
+                                    if (schedule.enableAnnualReport) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            FilterChip(
+                                                selected = schedule.annualStart,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(annualStart = !schedule.annualStart))
+                                                    )
+                                                },
+                                                label = { Text("Ngày đầu năm", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            FilterChip(
+                                                selected = schedule.annualEnd,
+                                                onClick = {
+                                                    viewModel.updateNotificationSettings(
+                                                        settings.copy(emailReportSchedule = schedule.copy(annualEnd = !schedule.annualEnd))
+                                                    )
+                                                },
+                                                label = { Text("Ngày cuối năm", fontSize = 11.sp) },
+                                                colors = FilterChipDefaults.filterChipColors(
+                                                    selectedContainerColor = ProfessionalPrimary,
+                                                    selectedLabelColor = Color.White
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -5685,13 +6298,27 @@ fun NotificationSettingsScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column {
+                    // Nhiệm vụ & Công việc mới [BUSINESS]
                     ToggleSettingItem(
                         title = "Nhiệm vụ & Công việc mới",
                         subtitle = "Nhận thông báo khi được giao việc hoặc thay đổi tiến độ",
                         checked = settings.newTask,
-                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(newTask = it)) }
+                        onCheckedChange = { isChecked ->
+                            if (isBusinessUnlocked) {
+                                viewModel.updateNotificationSettings(settings.copy(newTask = isChecked))
+                            } else {
+                                showBusinessUpgradeDialog = "Nhiệm vụ & công việc mới"
+                            }
+                        },
+                        badge = if (isBusinessUnlocked) "BUSINESS" else "BUSINESS (Khóa)",
+                        badgeBg = if (isBusinessUnlocked) Color(0xFFF3E8FF) else Color(0xFFFEE2E2),
+                        badgeColor = if (isBusinessUnlocked) Color(0xFF7E22CE) else Color(0xFFDC2626),
+                        enabled = isBusinessUnlocked,
+                        onClickLocked = { showBusinessUpgradeDialog = "Nhiệm vụ & công việc mới" }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Nhắc nhở hạn chót Deadline [FREE]
                     ToggleSettingItem(
                         title = "Nhắc nhở hạn chót (Deadline)",
                         subtitle = "Cảnh báo trước 30 phút và 1 ngày trước khi hết hạn",
@@ -5699,32 +6326,71 @@ fun NotificationSettingsScreen(
                         onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(deadlineReminder = it)) }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Cập nhật hồ sơ khách hàng [BUSINESS]
                     ToggleSettingItem(
                         title = "Cập nhật hồ sơ khách hàng",
                         subtitle = "Thông báo khi có khách mới phân phối hoặc sửa thông tin",
                         checked = settings.customerUpdate,
-                        onCheckedChange = { viewModel.updateNotificationSettings(settings.copy(customerUpdate = it)) }
+                        onCheckedChange = { isChecked ->
+                            if (isBusinessUnlocked) {
+                                viewModel.updateNotificationSettings(settings.copy(customerUpdate = isChecked))
+                            } else {
+                                showBusinessUpgradeDialog = "Cập nhật hồ sơ khách hàng"
+                            }
+                        },
+                        badge = if (isBusinessUnlocked) "BUSINESS" else "BUSINESS (Khóa)",
+                        badgeBg = if (isBusinessUnlocked) Color(0xFFF3E8FF) else Color(0xFFFEE2E2),
+                        badgeColor = if (isBusinessUnlocked) Color(0xFF7E22CE) else Color(0xFFDC2626),
+                        enabled = isBusinessUnlocked,
+                        onClickLocked = { showBusinessUpgradeDialog = "Cập nhật hồ sơ khách hàng" }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Báo giá & Duyệt hợp đồng [BUSINESS]
                     ToggleSettingItem(
                         title = "Báo giá & Duyệt hợp đồng",
                         subtitle = "Khách hàng chấp thuận báo giá hoặc yêu cầu chỉnh sửa",
-                        checked = notifyQuoteApproved,
-                        onCheckedChange = { notifyQuoteApproved = it }
+                        checked = settings.quoteApproval,
+                        onCheckedChange = { isChecked ->
+                            if (isBusinessUnlocked) {
+                                viewModel.updateNotificationSettings(settings.copy(quoteApproval = isChecked))
+                            } else {
+                                showBusinessUpgradeDialog = "Báo giá và duyệt hợp đồng"
+                            }
+                        },
+                        badge = if (isBusinessUnlocked) "BUSINESS" else "BUSINESS (Khóa)",
+                        badgeBg = if (isBusinessUnlocked) Color(0xFFF3E8FF) else Color(0xFFFEE2E2),
+                        badgeColor = if (isBusinessUnlocked) Color(0xFF7E22CE) else Color(0xFFDC2626),
+                        enabled = isBusinessUnlocked,
+                        onClickLocked = { showBusinessUpgradeDialog = "Báo giá và duyệt hợp đồng" }
                     )
                     HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Đợt thanh toán & Thu hồi công nợ [VIP]
                     ToggleSettingItem(
-                        title = "Đợt thanh toán & Thu hồi công nợ",
-                        subtitle = "Nhắc nhở các mốc thanh toán dự án đến hạn",
-                        checked = notifyPaymentDue,
-                        onCheckedChange = { notifyPaymentDue = it }
+                        title = "Thanh toán & Thu hồi công nợ",
+                        subtitle = "Nhắc nhở các mốc thanh toán dự án đến hạn và công nợ",
+                        checked = settings.paymentReminder,
+                        onCheckedChange = { isChecked ->
+                            if (isVipUnlocked) {
+                                viewModel.updateNotificationSettings(settings.copy(paymentReminder = isChecked))
+                            } else {
+                                showVipUpgradeDialog = "Thanh toán và thu hồi công nợ"
+                            }
+                        },
+                        badge = if (isVipUnlocked) "VIP" else "VIP (Khóa)",
+                        badgeBg = if (isVipUnlocked) Color(0xFFFEF3C7) else Color(0xFFFEE2E2),
+                        badgeColor = if (isVipUnlocked) Color(0xFFB45309) else Color(0xFFDC2626),
+                        enabled = isVipUnlocked,
+                        onClickLocked = { showVipUpgradeDialog = "Thanh toán và thu hồi công nợ" }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ================= 3. KHÔNG LÀM PHIỀN =================
+            // ================= 3. KHÔNG LÀM PHIỀN (DND) [VIP] =================
             SettingsGroupHeader("CHẾ ĐỘ KHÔNG LÀM PHIỀN (DND)")
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -5734,17 +6400,39 @@ fun NotificationSettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                if (!isVipUnlocked) {
+                                    Modifier.clickable { showVipUpgradeDialog = "Bật chế độ yên tĩnh ban đêm" }
+                                } else Modifier
+                            ),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Bật chế độ yên tĩnh ban đêm",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0F172A)
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Bật chế độ yên tĩnh ban đêm",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isVipUnlocked) Color(0xFF0F172A) else Color(0xFF64748B)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = if (isVipUnlocked) Color(0xFFFEF3C7) else Color(0xFFFEE2E2)
+                                ) {
+                                    Text(
+                                        text = if (isVipUnlocked) "VIP" else "VIP (Khóa)",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isVipUnlocked) Color(0xFFB45309) else Color(0xFFDC2626),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Tắt chuông và rung trong khoảng thời gian nghỉ ngơi",
                                 fontSize = 12.sp,
@@ -5752,12 +6440,22 @@ fun NotificationSettingsScreen(
                             )
                         }
                         Switch(
-                            checked = enableQuietHours,
-                            onCheckedChange = { enableQuietHours = it }
+                            checked = if (isVipUnlocked) settings.enableQuietHours else false,
+                            onCheckedChange = { isChecked ->
+                                if (isVipUnlocked) {
+                                    viewModel.updateNotificationSettings(settings.copy(enableQuietHours = isChecked))
+                                } else {
+                                    showVipUpgradeDialog = "Bật chế độ yên tĩnh ban đêm"
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = ProfessionalPrimary
+                            )
                         )
                     }
 
-                    if (enableQuietHours) {
+                    if (isVipUnlocked && settings.enableQuietHours) {
                         Spacer(modifier = Modifier.height(12.dp))
                         HorizontalDivider(color = Color(0xFFF1F5F9))
                         Spacer(modifier = Modifier.height(12.dp))
@@ -5775,7 +6473,7 @@ fun NotificationSettingsScreen(
                                         .background(Color(0xFFF1F5F9))
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
                                 ) {
-                                    Text(quietHourStart, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                    Text(settings.quietHourStart, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                                 }
                                 Text(" — ", color = Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
                                 Box(
@@ -5784,7 +6482,7 @@ fun NotificationSettingsScreen(
                                         .background(Color(0xFFF1F5F9))
                                         .padding(horizontal = 10.dp, vertical = 6.dp)
                                 ) {
-                                    Text(quietHourEnd, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                    Text(settings.quietHourEnd, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                                 }
                             }
                         }
@@ -5802,8 +6500,14 @@ fun NotificationSettingsScreen(
                                 color = Color(0xFF0F172A)
                             )
                             Switch(
-                                checked = allowVipOverride,
-                                onCheckedChange = { allowVipOverride = it }
+                                checked = settings.allowVipOverride,
+                                onCheckedChange = {
+                                    viewModel.updateNotificationSettings(settings.copy(allowVipOverride = it))
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = ProfessionalPrimary
+                                )
                             )
                         }
                     }
@@ -5860,6 +6564,224 @@ fun NotificationSettingsScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
         }
+    }
+
+    // ================= VIP UPGRADE DIALOG =================
+    if (showVipUpgradeDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showVipUpgradeDialog = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Nâng cấp gói VIP",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F172A)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Tính năng \"${showVipUpgradeDialog}\" chỉ dành riêng cho tài khoản gói VIP hoặc BUSINESS.",
+                        fontSize = 14.sp,
+                        color = Color(0xFF475569)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Nâng cấp ngay để mở khóa toàn bộ báo cáo email theo năm tài chính, chế độ không làm phiền và quản lý công nợ chuyên sâu.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF64748B)
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val targetTier = AccountTier.VIP
+                            showVipUpgradeDialog = null
+                            onNavigateToUpgrade(targetTier)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                    ) {
+                        Text(
+                            text = "Đăng ký sử dụng gói VIP",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            val targetTier = AccountTier.VIP
+                            showVipUpgradeDialog = null
+                            onNavigateToUpgrade(targetTier)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFD97706)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD97706))
+                    ) {
+                        Text(
+                            text = "Xem chi tiết gói VIP",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showVipUpgradeDialog = null },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B))
+                    ) {
+                        Text(
+                            text = "Đóng",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+        )
+    }
+
+    // ================= BUSINESS UPGRADE DIALOG =================
+    if (showBusinessUpgradeDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showBusinessUpgradeDialog = null },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF3E8FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Apartment,
+                        contentDescription = null,
+                        tint = Color(0xFF7E22CE),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Nâng cấp gói BUSINESS",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF0F172A)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Tính năng \"${showBusinessUpgradeDialog}\" chỉ dành riêng cho tài khoản gói BUSINESS.",
+                        fontSize = 14.sp,
+                        color = Color(0xFF475569)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Nâng cấp lên gói Doanh nghiệp để quản lý giao việc đa phòng ban, phân phối hồ sơ khách hàng và phê duyệt báo giá hợp đồng tập trung.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF64748B)
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val targetTier = AccountTier.BUSINESS
+                            showBusinessUpgradeDialog = null
+                            onNavigateToUpgrade(targetTier)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7E22CE))
+                    ) {
+                        Text(
+                            text = "Đăng ký sử dụng gói BUSINESS",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            val targetTier = AccountTier.BUSINESS
+                            showBusinessUpgradeDialog = null
+                            onNavigateToUpgrade(targetTier)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFF7E22CE)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF7E22CE))
+                    ) {
+                        Text(
+                            text = "Xem chi tiết gói BUSINESS",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showBusinessUpgradeDialog = null },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B))
+                    ) {
+                        Text(
+                            text = "Đóng",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -7686,23 +8608,64 @@ fun ToggleSettingItem(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    badge: String? = null,
+    badgeBg: Color = Color(0xFFF1F5F9),
+    badgeColor: Color = Color(0xFF64748B),
+    enabled: Boolean = true,
+    onClickLocked: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(
+                if (!enabled && onClickLocked != null) {
+                    Modifier.clickable { onClickLocked() }
+                } else Modifier
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (enabled) Color(0xFF0F172A) else Color(0xFF64748B)
+                )
+                if (badge != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = badgeBg
+                    ) {
+                        Text(
+                            text = badge,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = badgeColor,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(2.dp))
             Text(text = subtitle, fontSize = 12.sp, color = Color(0xFF64748B))
         }
 
+        Spacer(modifier = Modifier.width(12.dp))
+
         Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
+            checked = if (enabled) checked else false,
+            onCheckedChange = { isChecked ->
+                if (enabled) {
+                    onCheckedChange(isChecked)
+                } else {
+                    onClickLocked?.invoke()
+                }
+            },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = ProfessionalPrimary

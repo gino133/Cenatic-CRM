@@ -1,7 +1,12 @@
 package com.example.data.repository
 
+import com.example.data.model.AnnexItem
 import com.example.data.model.AttendanceRecord
 import com.example.data.model.AttendanceType
+import com.example.data.model.ContractAnnex
+import com.example.data.model.ContractItem
+import com.example.data.model.ContractNamingRule
+import com.example.data.model.ContractStatus
 import com.example.data.model.CustomerEntity
 import com.example.data.model.CustomerStatus
 import com.example.data.model.DealEntity
@@ -1006,6 +1011,109 @@ object CrmSeedData {
                 category = "Tư vấn giải pháp",
                 notes = "Bản dự thảo đính kèm danh mục 30 cảm biến đo đạc",
                 version = 1
+            )
+        )
+    }
+
+    fun getContractNamingRule(): ContractNamingRule {
+        return ContractNamingRule(
+            prefix = "HĐ-",
+            suffix = "",
+            digitsCount = 3,
+            resetMonthly = true,
+            monthFormatInPrefix = true,
+            monthFormatInSuffix = false,
+            annexPrefix = "PL-",
+            annexSuffix = ""
+        )
+    }
+
+    fun getSampleContracts(): List<ContractItem> {
+        return listOf(
+            ContractItem(
+                id = 1,
+                quoteId = 9,
+                contractNumber = "HĐ-202608-001",
+                title = "Hợp đồng Triển khai Smart City Khang Điền 2026",
+                customerName = "Tập đoàn BĐS Khang Điền",
+                customerId = 5,
+                originalAmount = 350_000_000.0,
+                signedDate = "10/08/2026",
+                status = ContractStatus.IN_PROGRESS,
+                paymentTerms = "• Đợt 1: Tạm ứng 30% (105.000.000 đ) ngay sau khi ký HĐ.\n• Đợt 2: Thanh toán 40% (140.000.000 đ) khi hoàn thành lắp đặt hệ thống máy chủ IoT.\n• Đợt 3: Thanh toán 30% (105.000.000 đ) sau khi nghiệm thu bàn giao cư dân.",
+                deliveryTerms = "• Thời gian triển khai: 60 ngày làm việc kể từ ngày nhận tạm ứng đợt 1.\n• Địa điểm: Khu đô thị Khang Điền Luxury, TP. Thủ Đức.",
+                warrantyTerms = "• Bảo hành toàn bộ phần mềm và thiết bị IoT trong 24 tháng.\n• Đội ngũ kỹ thuật hỗ trợ On-site trong vòng 2 giờ khi có yêu cầu khẩn cấp.",
+                annexes = listOf(
+                    ContractAnnex(
+                        id = 101,
+                        contractId = 1,
+                        annexNumber = "PL-01/HĐ-202608-001",
+                        title = "Phụ lục 01: Bổ sung 15 Cảm biến bãi đỗ xe thông minh",
+                        dateStr = "20/08/2026",
+                        notes = "Mở rộng vùng kiểm soát xe tầng hầm B2",
+                        increaseItems = listOf(
+                            AnnexItem(1001, "Cảm biến hồng ngoại nhận diện biển số & chỗ đỗ", 15.0, "Bộ", 2_500_000.0),
+                            AnnexItem(1002, "Cáp truyền dẫn tín hiệu chuyên dụng chống nhiễu", 300.0, "Mét", 35_000.0),
+                            AnnexItem(1003, "Gói lập trình API tích hợp App cư dân bổ sung", 1.0, "Gói", 12_000_000.0)
+                        ),
+                        decreaseItems = listOf(
+                            AnnexItem(1004, "Giảm trừ chi phí khảo sát ban đầu do dùng chung sơ đồ", 1.0, "Lần", 5_000_000.0)
+                        ),
+                        paymentTerms = "Thanh toán 100% giá trị phụ lục (55.000.000 đ) kèm theo đợt 2 của Hợp đồng chính.",
+                        deliveryTerms = "Hoàn thành lắp đặt cùng lúc với mốc tiến độ tháng 09/2026.",
+                        warrantyTerms = "Bảo hành đồng bộ theo thời hạn của Hợp đồng chính.",
+                        isSigned = true
+                    )
+                ),
+                notes = "Hợp đồng trọng điểm Q3/2026. Đã nhận đủ tiền tạm ứng đợt 1."
+            ),
+            ContractItem(
+                id = 2,
+                quoteId = 7,
+                contractNumber = "HĐ-202606-001",
+                title = "Hợp đồng Hệ thống Quản trị Chuỗi Cung ứng Hương Giang",
+                customerName = "Hương Giang Logistics & Vận Tải Biển",
+                customerId = 9,
+                originalAmount = 320_000_000.0,
+                signedDate = "12/06/2026",
+                status = ContractStatus.IN_PROGRESS,
+                paymentTerms = "• Đợt 1: Tạm ứng 40% (128.000.000 đ) khi ký hợp đồng.\n• Đợt 2: Thanh toán 30% (96.000.000 đ) sau khi nghiệm thu Module GPS Container.\n• Đợt 3: Thanh toán 30% (96.000.000 đ) sau khi đào tạo nhân viên và bàn giao.",
+                deliveryTerms = "• Bàn giao giai đoạn 1: 30 ngày.\n• Toàn bộ hệ thống: 90 ngày kể từ ngày ký.",
+                warrantyTerms = "• Bảo hành và bảo trì miễn phí trong 12 tháng.\n• Cập nhật bản vá bảo mật định kỳ hàng quý.",
+                annexes = emptyList(),
+                notes = "Đã hoàn thành 3/4 mốc tiến độ chính."
+            ),
+            ContractItem(
+                id = 3,
+                quoteId = 4,
+                contractNumber = "HĐ-202603-001",
+                title = "Hợp đồng Thiết Kế 3D Render & CRM Showroom Casa Luxury",
+                customerName = "Kiến Trúc & Nội Thất Casa Luxury",
+                customerId = 8,
+                originalAmount = 220_000_000.0,
+                signedDate = "15/03/2026",
+                status = ContractStatus.COMPLETED,
+                paymentTerms = "• Đợt 1: 50% khi ký HĐ.\n• Đợt 2: 50% khi bàn giao và ký biên bản nghiệm thu.",
+                deliveryTerms = "Hoàn thành trong 45 ngày làm việc.",
+                warrantyTerms = "Bảo hành 12 tháng hệ thống phần mềm bảng giá.",
+                annexes = emptyList(),
+                notes = "Đã thanh lý hợp đồng và quyết toán 100% doanh thu."
+            ),
+            ContractItem(
+                id = 4,
+                quoteId = 2,
+                contractNumber = "HĐ-202601-001",
+                title = "Hợp đồng Phát Triển App Cư Dân Khang Điền Luxury",
+                customerName = "Tập đoàn BĐS Khang Điền",
+                customerId = 5,
+                originalAmount = 210_000_000.0,
+                signedDate = "10/01/2026",
+                status = ContractStatus.COMPLETED,
+                paymentTerms = "• Thanh toán 3 đợt: 30% - 40% - 30%.",
+                deliveryTerms = "Hoàn thành bàn giao App lên App Store & Google Play sau 90 ngày.",
+                warrantyTerms = "Bảo hành 12 tháng và hỗ trợ nâng cấp phiên bản OS mới.",
+                annexes = emptyList(),
+                notes = "Dự án mẫu đã nghiệm thu thành công xuất sắc."
             )
         )
     }

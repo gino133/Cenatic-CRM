@@ -69,6 +69,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -256,9 +257,9 @@ fun ReportsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Nút 1: Đăng ký sử dụng (Kích hoạt trực tiếp)
+                // Nút 1: Đăng ký sử dụng (Chuyển đến trang mua gói BUSINESS)
                 Button(
-                    onClick = { viewModel.setAccountTier(AccountTier.BUSINESS) },
+                    onClick = { onNavigateToUpgrade?.invoke() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -272,12 +273,12 @@ fun ReportsScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Nút 2: Xem gói
+                // Nút 2: Xem chi tiết gói BUSINESS
                 OutlinedButton(
                     onClick = { onNavigateToUpgrade?.invoke() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF7C3AED)),
                     border = BorderStroke(1.dp, Color(0xFF7C3AED))
@@ -289,14 +290,17 @@ fun ReportsScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // Nút 3: Quay lại
                 OutlinedButton(
                     onClick = onBack,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF64748B)),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
                 ) {
-                    Text("Quay lại", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold)
+                    Text("Quay lại", color = Color(0xFF64748B), fontWeight = FontWeight.SemiBold, fontSize = 13.5.sp)
                 }
             }
         }
