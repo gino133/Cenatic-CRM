@@ -619,7 +619,7 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     val attendanceRecords: StateFlow<List<AttendanceRecord>> = _attendanceRecords.asStateFlow()
 
     // Actions for User, Auth & Settings
-    fun login(email: String, name: String = "") {
+    fun login(email: String, name: String = "", avatarUrl: String? = null) {
         _isLoggedIn.value = true
         userPreferences.setLoggedIn(true)
         if (email.isNotBlank()) {
@@ -628,6 +628,7 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
             val updated = current.copy(
                 email = email.trim(),
                 fullName = if (name.isNotBlank()) name.trim() else current.fullName,
+                avatarUrl = avatarUrl ?: current.avatarUrl,
                 isVip = savedProfile.accountTier.isVipOrHigher,
                 accountTier = savedProfile.accountTier,
                 role = when (savedProfile.accountTier) {

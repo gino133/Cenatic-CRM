@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "CRM Khách Hàng"
+rootProject.name = "Kinetic CRM"
 
 include(":app")

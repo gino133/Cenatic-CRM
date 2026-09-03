@@ -1,6 +1,6 @@
 {
-  "name": "CRM Khách Hàng",
-  "description": "Ứng dụng CRM quản lý khách hàng, cơ hội bán hàng, nhân sự, chấm công, tính lương và tùy chỉnh quy chế thâm niên chuyên nghiệp.",
+  "name": "Kinetic CRM",
+  "description": "Kinetic CRM - Ứng dụng CRM quản lý khách hàng, cơ hội bán hàng, báo giá, hợp đồng, tiến độ và vận hành doanh nghiệp toàn diện.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

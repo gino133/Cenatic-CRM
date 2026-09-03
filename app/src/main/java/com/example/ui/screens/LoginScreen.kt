@@ -1,5 +1,15 @@
 package com.example.ui.screens
 
+import android.accounts.AccountManager
+import android.app.Activity
+import android.os.Build
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -114,7 +124,16 @@ data class RegisteredAccount(
 fun LoginScreen(
     userPreferences: UserPreferences? = null,
     onLoginSuccess: (email: String, name: String) -> Unit
+) = LoginScreen(userPreferences = userPreferences) { email, name, _ ->
+    onLoginSuccess(email, name)
+}
+
+@Composable
+fun LoginScreen(
+    userPreferences: UserPreferences? = null,
+    onLoginSuccess: (email: String, name: String, avatarUrl: String?) -> Unit
 ) {
+    val context = LocalContext.current
     var authMode by remember { mutableStateOf(AuthMode.LOGIN) }
     var registerOption by remember { mutableStateOf(RegisterOption.GMAIL) }
 
@@ -167,7 +186,7 @@ fun LoginScreen(
     var isBiometricScanning by remember { mutableStateOf(false) }
     var isBiometricSuccess by remember { mutableStateOf(false) }
 
-    val handleAuthSuccess: (String, String) -> Unit = { email, name ->
+    fun handleAuthSuccess(email: String, name: String, avatarUrl: String? = null) {
         if (securitySettings.twoFactorAuth) {
             pending2FAEmail = email
             pending2FAName = name
@@ -175,7 +194,135 @@ fun LoginScreen(
             twoFactorOtpError = null
             show2FADialog = true
         } else {
-            onLoginSuccess(email, name)
+            onLoginSuccess(email, name, avatarUrl)
+        }
+    }
+
+    val handleAuthSuccess2: (String, String) -> Unit = { email, name ->
+        handleAuthSuccess(email, name, null)
+    }
+
+    val onGoogleAccountRetrieved: (email: String, displayName: String, avatarUrl: String?) -> Unit = { email, name, avatarUrl ->
+        val cleanEmail = email.trim()
+        val cleanName = if (name.isNotBlank()) name.trim() else cleanEmail.substringBefore("@").replace(".", " ")
+            .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+
+        val newGoogleAcc = RegisteredAccount(
+            email = cleanEmail,
+            password = "",
+            fullName = cleanName,
+            isVerified = true,
+            isGoogle = true
+        )
+        accounts.removeAll { it.email.equals(cleanEmail, ignoreCase = true) }
+        accounts.add(newGoogleAcc)
+        userPreferences?.saveRegisteredAccount(
+            LocalAccount(
+                email = newGoogleAcc.email,
+                password = "",
+                fullName = newGoogleAcc.fullName,
+                isVerified = true,
+                isGoogle = true
+            )
+        )
+        if (avatarUrl != null) {
+            val currentProfile = userPreferences?.getUserProfile()
+            if (currentProfile != null) {
+                userPreferences.saveUserProfile(currentProfile.copy(avatarUrl = avatarUrl))
+            }
+        }
+        handleAuthSuccess(cleanEmail, cleanName, avatarUrl)
+    }
+
+    val accountManagerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
+            if (!email.isNullOrBlank()) {
+                val displayName = email.substringBefore("@").replace(".", " ")
+                    .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+                onGoogleAccountRetrieved(email, displayName, null)
+            }
+        }
+    }
+
+    val launchAccountManager: () -> Unit = {
+        try {
+            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                AccountManager.newChooseAccountIntent(
+                    null,
+                    null,
+                    arrayOf("com.google"),
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                AccountManager.newChooseAccountIntent(
+                    null,
+                    null,
+                    arrayOf("com.google"),
+                    false,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            }
+            accountManagerLauncher.launch(intent)
+        } catch (e: Exception) {
+            Log.e("GoogleAuth", "AccountManager intent error: ${e.message}", e)
+            showGoogleAccountSelectorDialog = true
+        }
+    }
+
+    val googleSignInClient = remember(context) {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestProfile()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val email = account.email
+                if (!email.isNullOrBlank()) {
+                    val displayName = account.displayName ?: ""
+                    val photoUrl = account.photoUrl?.toString()
+                    onGoogleAccountRetrieved(email, displayName, photoUrl)
+                    return@rememberLauncherForActivityResult
+                }
+            } catch (e: Exception) {
+                Log.w("GoogleAuth", "GoogleSignIn status error, falling back to AccountManager: ${e.message}")
+                launchAccountManager()
+                return@rememberLauncherForActivityResult
+            }
+        }
+        if (result.resultCode != Activity.RESULT_CANCELED) {
+            launchAccountManager()
+        }
+    }
+
+    val triggerGoogleAuth: () -> Unit = {
+        try {
+            googleSignInClient.signOut().addOnCompleteListener {
+                try {
+                    googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                } catch (e: Exception) {
+                    launchAccountManager()
+                }
+            }
+        } catch (e: Exception) {
+            launchAccountManager()
         }
     }
 
@@ -223,7 +370,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = "Kinetic CRM Enterprise",
+                    text = "Kinetic CRM",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF0F172A)
@@ -416,7 +563,7 @@ fun LoginScreen(
                                                 pendingVerificationAccount = it
                                                 showVerificationEmailDialog = true
                                             },
-                                            onSuccess = handleAuthSuccess
+                                            onSuccess = handleAuthSuccess2
                                         )
                                     }),
                                     shape = RoundedCornerShape(12.dp),
@@ -519,7 +666,7 @@ fun LoginScreen(
                                                 pendingVerificationAccount = it
                                                 showVerificationEmailDialog = true
                                             },
-                                            onSuccess = handleAuthSuccess
+                                            onSuccess = handleAuthSuccess2
                                         )
                                     },
                                     modifier = Modifier
@@ -571,7 +718,7 @@ fun LoginScreen(
 
                                 // Fast Google Sign-in
                                 OutlinedButton(
-                                    onClick = { showGoogleAccountSelectorDialog = true },
+                                    onClick = { triggerGoogleAuth() },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(48.dp),
@@ -587,6 +734,24 @@ fun LoginScreen(
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Medium,
                                             color = Color(0xFF1E293B)
+                                        )
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    TextButton(
+                                        onClick = { showGoogleAccountSelectorDialog = true }
+                                    ) {
+                                        Text(
+                                            text = "Tùy chọn hoặc chuyển tài khoản Google",
+                                            fontSize = 12.sp,
+                                            color = ProfessionalPrimary,
+                                            textDecoration = TextDecoration.Underline
                                         )
                                     }
                                 }
@@ -735,7 +900,7 @@ fun LoginScreen(
                                             Spacer(modifier = Modifier.height(16.dp))
 
                                             Button(
-                                                onClick = { showGoogleAccountSelectorDialog = true },
+                                                onClick = { triggerGoogleAuth() },
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .height(46.dp),
@@ -746,12 +911,24 @@ fun LoginScreen(
                                                     GoogleGIcon()
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     Text(
-                                                        "Chọn tài khoản Gmail để liên kết",
+                                                        "Liên kết với tài khoản Google",
                                                         fontSize = 13.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = Color.White
                                                     )
                                                 }
+                                            }
+
+                                            TextButton(
+                                                onClick = { showGoogleAccountSelectorDialog = true },
+                                                modifier = Modifier.padding(top = 4.dp)
+                                            ) {
+                                                Text(
+                                                    "Hoặc chọn từ tài khoản đã lưu / nhập Gmail khác",
+                                                    fontSize = 12.sp,
+                                                    color = ProfessionalPrimary,
+                                                    textDecoration = TextDecoration.Underline
+                                                )
                                             }
                                         }
                                     }
@@ -1092,6 +1269,47 @@ fun LoginScreen(
                     HorizontalDivider(color = Color(0xFFF1F5F9))
                     Spacer(modifier = Modifier.height(14.dp))
 
+                    // Primary button to launch device Google Account Picker
+                    Button(
+                        onClick = {
+                            showGoogleAccountSelectorDialog = false
+                            triggerGoogleAuth()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = ProfessionalPrimaryNavy)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            GoogleGIcon(size = 20)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                "Mở hộp thoại Google của thiết bị",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
+                        Text(
+                            text = "HOẶC",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF94A3B8),
+                            modifier = Modifier.padding(horizontal = 10.dp)
+                        )
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+
                     if (savedGoogleAccounts.isNotEmpty()) {
                         Text(
                             text = "Tài khoản đã lưu trên thiết bị:",
@@ -1301,7 +1519,7 @@ fun LoginScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Từ: no-reply@nexus-crm.com",
+                                text = "Từ: no-reply@kinetic-crm.com",
                                 fontSize = 11.sp,
                                 color = Color(0xFF64748B)
                             )
@@ -1312,7 +1530,7 @@ fun LoginScreen(
                                 color = Color(0xFF334155)
                             )
                             Text(
-                                text = "Tiêu đề: [Nexus CRM] Xác nhận kích hoạt tài khoản của bạn",
+                                text = "Tiêu đề: [Kinetic CRM] Xác nhận kích hoạt tài khoản của bạn",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0F172A),
@@ -1329,7 +1547,7 @@ fun LoginScreen(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Cảm ơn bạn đã đăng ký tài khoản tại Kinetic CRM Enterprise. Để bảo mật và hoàn tất kích hoạt tài khoản của bạn, vui lòng bấm vào nút liên kết xác thực bên dưới:",
+                                text = "Cảm ơn bạn đã đăng ký tài khoản tại Kinetic CRM. Để bảo mật và hoàn tất kích hoạt tài khoản của bạn, vui lòng bấm vào nút liên kết xác thực bên dưới:",
                                 fontSize = 12.sp,
                                 color = Color(0xFF475569),
                                 lineHeight = 17.sp
@@ -1508,7 +1726,7 @@ fun LoginScreen(
                         keyboardActions = KeyboardActions(onDone = {
                             if (twoFactorOtpInput.length == 6) {
                                 show2FADialog = false
-                                onLoginSuccess(pending2FAEmail, pending2FAName)
+                                onLoginSuccess(pending2FAEmail, pending2FAName, null)
                             } else {
                                 twoFactorOtpError = "Vui lòng nhập đủ 6 chữ số OTP"
                             }
@@ -1531,7 +1749,7 @@ fun LoginScreen(
                     onClick = {
                         if (twoFactorOtpInput.length == 6) {
                             show2FADialog = false
-                            onLoginSuccess(pending2FAEmail, pending2FAName)
+                            onLoginSuccess(pending2FAEmail, pending2FAName, null)
                         } else {
                             twoFactorOtpError = "Vui lòng nhập đủ 6 chữ số OTP từ ứng dụng Authenticator"
                         }
@@ -1757,12 +1975,27 @@ fun GoogleAccountItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = Color(0xFF0F172A)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = name,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = Color(0xFFEFF6FF),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "Google",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2563EB),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
+                }
                 Text(
                     text = email,
                     fontSize = 12.sp,

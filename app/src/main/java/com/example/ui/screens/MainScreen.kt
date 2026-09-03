@@ -157,8 +157,8 @@ fun MainScreen(viewModel: CrmViewModel) {
     if (!isLoggedIn) {
         LoginScreen(
             userPreferences = viewModel.userPreferences,
-            onLoginSuccess = { email, name ->
-                viewModel.login(email, name)
+            onLoginSuccess = { email, name, avatarUrl ->
+                viewModel.login(email, name, avatarUrl)
             }
         )
         return
