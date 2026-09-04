@@ -376,18 +376,19 @@ fun SettingsHubScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Quick Tier Switcher & Data Reset for Testing
-        AccountTierTestingCard(
-            currentTier = userProfile.accountTier,
-            onSelectTier = { newTier ->
-                viewModel.setAccountTier(newTier)
-            },
-            onResetData = {
-                viewModel.resetToComprehensiveSeedData()
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        // Quick Tier Switcher & Data Reset for Testing - Chỉ hiển thị duy nhất cho tài khoản test admin@crm.vn
+        if (userProfile.email.equals("admin@crm.vn", ignoreCase = true)) {
+            AccountTierTestingCard(
+                currentTier = userProfile.accountTier,
+                onSelectTier = { newTier ->
+                    viewModel.setAccountTier(newTier)
+                },
+                onResetData = {
+                    viewModel.resetToComprehensiveSeedData()
+                }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Upgrade Banner
         Card(

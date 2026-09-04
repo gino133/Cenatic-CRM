@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.QuoteItem
+import com.example.data.model.QuoteProductItem
 import com.example.ui.components.formatFullCurrencyVND
 import com.example.ui.theme.ProfessionalPrimary
 import com.example.ui.theme.ProfessionalPrimaryNavy
@@ -70,9 +71,13 @@ data class QuoteDisplayItem(
     val name: String,
     val quantity: Double,
     val unit: String,
-    val unitPrice: Double
+    val unitPrice: Double,
+    val vatPercent: Double = 10.0,
+    val notes: String = ""
 ) {
     val totalPrice: Double get() = quantity * unitPrice
+    val vatAmount: Double get() = totalPrice * (vatPercent / 100.0)
+    val totalWithVat: Double get() = totalPrice + vatAmount
 }
 
 @Composable
@@ -89,21 +94,47 @@ fun QuoteDetailDialog(
     var showExportPdfModal by remember { mutableStateOf(false) }
     var showExportExcelModal by remember { mutableStateOf(false) }
 
-    // Generate sample items based on category and total amount
+    // Generate items based on quote.items or fallback
     val displayItems = remember(quote) {
-        val total = quote.amount
-        if (total <= 0) {
-            listOf(
-                QuoteDisplayItem("Hạng mục tư vấn & triển khai", 1.0, "Gói", 0.0)
-            )
+        if (quote.items.isNotEmpty()) {
+            quote.items.map {
+                QuoteDisplayItem(
+                    name = it.name,
+                    quantity = it.quantity,
+                    unit = it.unit,
+                    unitPrice = it.unitPrice,
+                    vatPercent = it.vatPercent,
+                    notes = it.notes
+                )
+            }
         } else {
-            val item1Amount = (total * 0.6).toLong().toDouble()
-            val item2Amount = total - item1Amount
-            listOf(
-                QuoteDisplayItem(quote.title, 1.0, "Gói", item1Amount),
-                QuoteDisplayItem("Dịch vụ bảo hành & hỗ trợ kỹ thuật tiêu chuẩn", 1.0, "Gói", item2Amount)
-            )
+            val total = quote.amount
+            if (total <= 0) {
+                listOf(
+                    QuoteDisplayItem("Hạng mục tư vấn & triển khai", 1.0, "Gói", 0.0, 10.0)
+                )
+            } else {
+                val item1Amount = (total * 0.6).toLong().toDouble()
+                val item2Amount = total - item1Amount
+                listOf(
+                    QuoteDisplayItem(quote.title, 1.0, "Gói", item1Amount, 10.0),
+                    QuoteDisplayItem("Dịch vụ bảo hành & hỗ trợ kỹ thuật tiêu chuẩn", 1.0, "Gói", item2Amount, 10.0)
+                )
+            }
         }
+    }
+
+    val totalPreVat = remember(displayItems) { displayItems.sumOf { it.totalPrice } }
+    val totalVat = remember(displayItems) { displayItems.sumOf { it.vatAmount } }
+    val totalPostVat = remember(displayItems) { totalPreVat + totalVat }
+    val vatGroups = remember(displayItems) {
+        displayItems.groupBy { it.vatPercent }
+            .map { (vat, list) ->
+                val pre = list.sumOf { it.totalPrice }
+                val v = list.sumOf { it.vatAmount }
+                Triple(vat, pre, v)
+            }
+            .sortedBy { it.first }
     }
 
     val statusColor = when (quote.status.lowercase()) {
@@ -310,73 +341,147 @@ fun QuoteDetailDialog(
                                     .padding(horizontal = 8.dp, vertical = 6.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Tên sản phẩm / Dịch vụ", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), modifier = Modifier.weight(2f))
-                                Text("SL", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), textAlign = TextAlign.Center, modifier = Modifier.weight(0.6f))
-                                Text("Đơn giá", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), textAlign = TextAlign.End, modifier = Modifier.weight(1.2f))
-                                Text("Thành tiền", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), textAlign = TextAlign.End, modifier = Modifier.weight(1.4f))
+                                Text("Tên sản phẩm / Dịch vụ", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), modifier = Modifier.weight(1.8f))
+                                Text("SL", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), textAlign = TextAlign.Center, modifier = Modifier.weight(0.5f))
+                                Text("Đơn giá", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), textAlign = TextAlign.End, modifier = Modifier.weight(1.1f))
+                                Text("VAT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), textAlign = TextAlign.Center, modifier = Modifier.weight(0.5f))
+                                Text("Thành tiền", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF475569), textAlign = TextAlign.End, modifier = Modifier.weight(1.3f))
                             }
 
                             Spacer(modifier = Modifier.height(6.dp))
 
                             // Table Rows
                             displayItems.forEachIndexed { idx, item ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "${idx + 1}. ${item.name}",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF1E293B),
-                                        modifier = Modifier.weight(2f)
-                                    )
-                                    Text(
-                                        text = "${item.quantity.toInt()} ${item.unit}",
-                                        fontSize = 11.sp,
-                                        color = Color(0xFF64748B),
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.weight(0.6f)
-                                    )
-                                    Text(
-                                        text = formatFullCurrencyVND(item.unitPrice),
-                                        fontSize = 11.sp,
-                                        color = Color(0xFF64748B),
-                                        textAlign = TextAlign.End,
-                                        modifier = Modifier.weight(1.2f)
-                                    )
-                                    Text(
-                                        text = formatFullCurrencyVND(item.totalPrice),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFF0F172A),
-                                        textAlign = TextAlign.End,
-                                        modifier = Modifier.weight(1.4f)
-                                    )
-                                }
-                                if (idx < displayItems.size - 1) {
-                                    Divider(color = Color(0xFFF1F5F9), modifier = Modifier.padding(horizontal = 4.dp))
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1.8f)) {
+                                            Text(
+                                                text = "${idx + 1}. ${item.name}",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color(0xFF1E293B)
+                                            )
+                                            if (item.notes.isNotBlank()) {
+                                                Text(
+                                                    text = item.notes,
+                                                    fontSize = 10.sp,
+                                                    color = Color(0xFF64748B)
+                                                )
+                                            }
+                                        }
+                                        Text(
+                                            text = "${if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else item.quantity.toString()} ${item.unit}",
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF64748B),
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.weight(0.5f)
+                                        )
+                                        Text(
+                                            text = formatFullCurrencyVND(item.unitPrice),
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF64748B),
+                                            textAlign = TextAlign.End,
+                                            modifier = Modifier.weight(1.1f)
+                                        )
+                                        Text(
+                                            text = "${item.vatPercent.toInt()}%",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFF047857),
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.weight(0.5f)
+                                        )
+                                        Text(
+                                            text = formatFullCurrencyVND(item.totalPrice),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFF0F172A),
+                                            textAlign = TextAlign.End,
+                                            modifier = Modifier.weight(1.3f)
+                                        )
+                                    }
+                                    if (idx < displayItems.size - 1) {
+                                        Divider(color = Color(0xFFF1F5F9), modifier = Modifier.padding(horizontal = 4.dp))
+                                    }
                                 }
                             }
 
                             Divider(color = Color(0xFFE2E8F0), modifier = Modifier.padding(vertical = 8.dp))
 
-                            // Total Summary
-                            Row(
+                            // Total Summary Breakdown with VAT details
+                            Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                Text("TỔNG CỘNG THANH TOÁN", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
-                                Text(
-                                    text = formatFullCurrencyVND(quote.amount),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = ProfessionalPrimary
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Tổng tiền trước thuế (Pre-VAT):", fontSize = 12.sp, color = Color(0xFF475569))
+                                    Text(
+                                        text = formatFullCurrencyVND(totalPreVat),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF1E293B)
+                                    )
+                                }
+
+                                if (vatGroups.isNotEmpty()) {
+                                    vatGroups.forEach { (vat, preVatAmt, vatAmt) ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "• Thuế VAT ${vat.toInt()}% (trên ${formatFullCurrencyVND(preVatAmt)}):",
+                                                fontSize = 11.sp,
+                                                color = Color(0xFF64748B)
+                                            )
+                                            Text(
+                                                text = formatFullCurrencyVND(vatAmt),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = Color(0xFF047857)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("Tổng tiền thuế VAT:", fontSize = 12.sp, color = Color(0xFF475569))
+                                    Text(
+                                        text = formatFullCurrencyVND(totalVat),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF047857)
+                                    )
+                                }
+
+                                Divider(color = Color(0xFFE2E8F0), modifier = Modifier.padding(vertical = 4.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("TỔNG CỘNG THANH TOÁN (SAU VAT)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                                    Text(
+                                        text = formatFullCurrencyVND(totalPostVat),
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = ProfessionalPrimary
+                                    )
+                                }
                             }
                         }
                     }

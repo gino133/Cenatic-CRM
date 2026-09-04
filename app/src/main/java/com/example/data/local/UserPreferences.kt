@@ -104,24 +104,51 @@ class UserPreferences(context: Context) {
     }
 
     fun getRegisteredAccounts(): List<LocalAccount> {
-        val jsonStr = prefs.getString(KEY_REGISTERED_ACCOUNTS, null) ?: return emptyList()
+        val jsonStr = prefs.getString(KEY_REGISTERED_ACCOUNTS, null)
         val list = mutableListOf<LocalAccount>()
-        try {
-            val jsonArray = JSONArray(jsonStr)
-            for (i in 0 until jsonArray.length()) {
-                val obj = jsonArray.getJSONObject(i)
-                list.add(
-                    LocalAccount(
-                        email = obj.getString("email"),
-                        password = obj.optString("password", ""),
-                        fullName = obj.optString("fullName", ""),
-                        isVerified = obj.optBoolean("isVerified", true),
-                        isGoogle = obj.optBoolean("isGoogle", false)
+        if (jsonStr != null) {
+            try {
+                val jsonArray = JSONArray(jsonStr)
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    list.add(
+                        LocalAccount(
+                            email = obj.getString("email"),
+                            password = obj.optString("password", ""),
+                            fullName = obj.optString("fullName", ""),
+                            isVerified = obj.optBoolean("isVerified", true),
+                            isGoogle = obj.optBoolean("isGoogle", false)
+                        )
                     )
-                )
+                }
+            } catch (_: Exception) {
+                // Ignore parse errors
             }
-        } catch (_: Exception) {
-            // Ignore parse errors
+        }
+
+        var modified = false
+        // Purge any previously seeded non-admin test accounts
+        val removed = list.removeAll { it.email.equals("hakirotomo@gmail.com", ignoreCase = true) }
+        if (removed) {
+            modified = true
+        }
+
+        // admin@crm.vn is the sole default test account
+        if (list.none { it.email.equals("admin@crm.vn", ignoreCase = true) }) {
+            list.add(
+                LocalAccount(
+                    email = "admin@crm.vn",
+                    password = "admin", // also supports 123456
+                    fullName = "Quản Trị Viên VIP",
+                    isVerified = true,
+                    isGoogle = false
+                )
+            )
+            modified = true
+        }
+
+        if (modified || jsonStr == null) {
+            saveAllAccounts(list)
         }
         return list
     }

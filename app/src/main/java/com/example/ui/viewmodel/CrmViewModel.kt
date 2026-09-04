@@ -101,7 +101,11 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            repository.seedInitialDataIfEmpty()
+            val currentEmail = userPreferences.getUserProfile().email
+            val loggedIn = userPreferences.isLoggedIn()
+            if (loggedIn && currentEmail.equals("admin@crm.vn", ignoreCase = true)) {
+                repository.seedInitialDataIfEmpty()
+            }
         }
     }
 
@@ -622,16 +626,22 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     fun login(email: String, name: String = "", avatarUrl: String? = null) {
         _isLoggedIn.value = true
         userPreferences.setLoggedIn(true)
+        val isAdmin = email.trim().equals("admin@crm.vn", ignoreCase = true)
         if (email.isNotBlank()) {
             val current = _userProfile.value
             val savedProfile = userPreferences.getUserProfile()
+            val tier = if (isAdmin) {
+                if (savedProfile.accountTier == com.example.data.model.AccountTier.FREE) com.example.data.model.AccountTier.BUSINESS else savedProfile.accountTier
+            } else {
+                savedProfile.accountTier
+            }
             val updated = current.copy(
                 email = email.trim(),
-                fullName = if (name.isNotBlank()) name.trim() else current.fullName,
+                fullName = if (name.isNotBlank()) name.trim() else if (isAdmin) "Quản Trị Viên VIP" else current.fullName,
                 avatarUrl = avatarUrl ?: current.avatarUrl,
-                isVip = savedProfile.accountTier.isVipOrHigher,
-                accountTier = savedProfile.accountTier,
-                role = when (savedProfile.accountTier) {
+                isVip = tier.isVipOrHigher,
+                accountTier = tier,
+                role = if (isAdmin) "VIP ENTERPRISE" else when (tier) {
                     com.example.data.model.AccountTier.FREE -> "FREE MEMBER"
                     com.example.data.model.AccountTier.VIP -> "VIP MEMBER"
                     com.example.data.model.AccountTier.BUSINESS -> "VIP ENTERPRISE"
@@ -639,6 +649,33 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
             )
             _userProfile.value = updated
             userPreferences.saveUserProfile(updated)
+
+            if (isAdmin) {
+                // Restore comprehensive testing data for admin test account
+                viewModelScope.launch {
+                    repository.resetToComprehensiveSeedData()
+                    _quotes.value = CrmSeedData.getSampleQuotes()
+                    _contracts.value = CrmSeedData.getSampleContracts()
+                    _contractNamingRule.value = CrmSeedData.getContractNamingRule()
+                    _projects.value = CrmSeedData.getSampleProjects()
+                    _employees.value = CrmSeedData.getSampleEmployees()
+                    _attendanceRecords.value = CrmSeedData.getSampleAttendance()
+                }
+            } else {
+                // Clear test/sample data for fresh user accounts
+                clearUserDataForNewAccount()
+            }
+        }
+    }
+
+    fun clearUserDataForNewAccount() {
+        viewModelScope.launch {
+            repository.clearAllUserData()
+            _quotes.value = emptyList()
+            _contracts.value = emptyList()
+            _projects.value = emptyList()
+            _employees.value = emptyList()
+            _attendanceRecords.value = emptyList()
         }
     }
 
@@ -864,7 +901,8 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
                 originalAmount = targetQuote.amount,
                 signedDate = todayStr,
                 status = ContractStatus.DRAFT,
-                notes = "Hợp đồng chuyển từ Báo giá ${targetQuote.quoteNumber}"
+                notes = "Hợp đồng chuyển từ Báo giá ${targetQuote.quoteNumber}",
+                items = targetQuote.items
             )
             createdContract = newContract
             _contracts.value = listOf(newContract) + _contracts.value
@@ -956,15 +994,36 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleProjectStep(projectId: Long, stepId: Long) {
         _projects.value = _projects.value.map { project ->
             if (project.id == projectId) {
-                val updatedSteps = project.steps.map { step ->
-                    if (step.id == stepId) {
-                        val newStatus = if (step.status == StepStatus.COMPLETED) StepStatus.PENDING else StepStatus.COMPLETED
-                        step.copy(status = newStatus)
-                    } else step
+                val targetIndex = project.steps.indexOfFirst { it.id == stepId }
+                if (targetIndex < 0) return@map project
+
+                val currentStep = project.steps[targetIndex]
+                val isCurrentlyCompleted = currentStep.status == StepStatus.COMPLETED
+
+                val updatedSteps = project.steps.mapIndexed { index, step ->
+                    when {
+                        index == targetIndex -> {
+                            if (isCurrentlyCompleted) {
+                                step.copy(status = StepStatus.PENDING)
+                            } else {
+                                step.copy(status = StepStatus.COMPLETED)
+                            }
+                        }
+                        index > targetIndex && isCurrentlyCompleted -> {
+                            // Khi bỏ tick bước này, tất cả các bước phía sau tự động bỏ tick
+                            step.copy(status = StepStatus.PENDING)
+                        }
+                        else -> step
+                    }
                 }
+
                 val updatedProject = project.copy(steps = updatedSteps)
                 val newProgress = updatedProject.calculateCalculatedProgress()
-                val newStatusType = if (newProgress == 100) ProjectStatusType.ON_TRACK else project.statusType
+                val newStatusType = when {
+                    newProgress >= 100 -> ProjectStatusType.COMPLETED
+                    project.statusType == ProjectStatusType.COMPLETED -> ProjectStatusType.ON_TRACK
+                    else -> project.statusType
+                }
                 updatedProject.copy(progressPercent = newProgress, statusType = newStatusType)
             } else project
         }
@@ -978,7 +1037,11 @@ class CrmViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val updatedProject = project.copy(steps = updatedSteps)
                 val newProgress = updatedProject.calculateCalculatedProgress()
-                val newStatusType = if (newProgress == 100) ProjectStatusType.ON_TRACK else project.statusType
+                val newStatusType = when {
+                    newProgress >= 100 -> ProjectStatusType.COMPLETED
+                    project.statusType == ProjectStatusType.COMPLETED -> ProjectStatusType.ON_TRACK
+                    else -> project.statusType
+                }
                 updatedProject.copy(progressPercent = newProgress, statusType = newStatusType)
             } else project
         }

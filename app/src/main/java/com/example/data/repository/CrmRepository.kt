@@ -222,6 +222,16 @@ class CrmRepository(
         )
     }
 
+    // Clear all user data for fresh/new accounts
+    suspend fun clearAllUserData() {
+        taskDao.deleteAllTasks()
+        interactionDao.deleteAllInteractions()
+        dealDao.deleteAllDeals()
+        customerDao.deleteAllCustomers()
+        customerTypeDao.deleteAllCustomerTypes()
+        customerTypeDao.insertCustomerTypes(getDefaultCustomerTypes())
+    }
+
     // Reset & Comprehensive Seed Data from Dec 2025 to Aug 2026
     suspend fun resetToComprehensiveSeedData() {
         taskDao.deleteAllTasks()

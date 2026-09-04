@@ -405,7 +405,7 @@ fun QuotesAndProjectsScreen(
                                 "ON_TRACK" -> proj.statusType == ProjectStatusType.ON_TRACK && proj.progressPercent < 100
                                 "NEARING" -> proj.statusType == ProjectStatusType.NEARING && proj.progressPercent < 100
                                 "DELAYED" -> proj.statusType == ProjectStatusType.DELAYED && proj.progressPercent < 100
-                                "COMPLETED" -> proj.progressPercent == 100
+                                "COMPLETED" -> proj.progressPercent >= 100 || proj.statusType == ProjectStatusType.COMPLETED
                                 else -> true
                             }
                             matchesSearch && matchesStatus
@@ -1122,6 +1122,7 @@ fun ProjectProgressCard(
         ProjectStatusType.ON_TRACK -> Pair(Color(0xFFDEF7EC), Color(0xFF047857))
         ProjectStatusType.NEARING -> Pair(Color(0xFFFEF3C7), Color(0xFFD97706))
         ProjectStatusType.DELAYED -> Pair(Color(0xFFFDE8E8), Color(0xFFE02424))
+        ProjectStatusType.COMPLETED -> Pair(Color(0xFFECFDF5), Color(0xFF059669))
     }
 
     Card(

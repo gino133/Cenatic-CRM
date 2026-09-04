@@ -243,11 +243,32 @@ data class QuoteRevision(
     val notes: String = ""
 )
 
+data class QuoteProductItem(
+    val id: Long = System.currentTimeMillis(),
+    val name: String = "",
+    val notes: String = "",
+    val unit: String = "Gói",
+    val quantity: Double = 1.0,
+    val unitPrice: Double = 0.0,
+    val vatPercent: Double = 10.0 // Thuế VAT: 0, 5, 8, 10%
+) {
+    val subtotal: Double get() = quantity * unitPrice
+    val vatAmount: Double get() = subtotal * (vatPercent / 100.0)
+    val totalWithVat: Double get() = subtotal + vatAmount
+}
+
+data class VatGroupSummary(
+    val vatPercent: Double,
+    val preVatAmount: Double,
+    val vatAmount: Double,
+    val postVatAmount: Double
+)
+
 data class QuoteItem(
     val id: Long = 0,
     val quoteNumber: String, // e.g. "BG-20231027-001"
     val title: String, // e.g. "Website Redesign"
-    val amount: Double, // e.g. 125000000.0
+    val amount: Double, // Giá trị trước thuế (Pre-VAT)
     val dateStr: String, // e.g. "27/10/2023"
     val status: String, // "Draft", "Sent", "Accepted"
     val customerName: String = "",
@@ -257,8 +278,29 @@ data class QuoteItem(
     val version: Int = 1,
     val revisions: List<QuoteRevision> = emptyList(),
     val contractId: Long? = null,
-    val contractNumber: String? = null
-)
+    val contractNumber: String? = null,
+    val items: List<QuoteProductItem> = emptyList()
+) {
+    val totalPreVat: Double get() = if (items.isNotEmpty()) items.sumOf { it.subtotal } else amount
+    val totalVat: Double get() = items.sumOf { it.vatAmount }
+    val totalPostVat: Double get() = totalPreVat + totalVat
+
+    fun getVatSummaries(): List<VatGroupSummary> {
+        if (items.isEmpty()) return emptyList()
+        return items.groupBy { it.vatPercent }
+            .map { (vat, productList) ->
+                val preVat = productList.sumOf { it.subtotal }
+                val vatAmt = productList.sumOf { it.vatAmount }
+                VatGroupSummary(
+                    vatPercent = vat,
+                    preVatAmount = preVat,
+                    vatAmount = vatAmt,
+                    postVatAmount = preVat + vatAmt
+                )
+            }
+            .sortedBy { it.vatPercent } // Sắp xếp theo VAT tăng dần
+    }
+}
 
 // Contract Management Models (Quản lý Hợp đồng & Phụ lục)
 enum class ContractStatus(val label: String, val badgeColorHex: String, val badgeBgHex: String) {
@@ -312,7 +354,8 @@ data class ContractItem(
     val deliveryTerms: String = "• Thời gian triển khai & bàn giao: Trong vòng 30 ngày làm việc kể từ ngày nhận đủ tiền tạm ứng đợt 1.\n• Địa điểm bàn giao: Trực tiếp tại trụ sở Bên Mua hoặc qua hệ thống số.",
     val warrantyTerms: String = "• Thời gian bảo hành: 12 tháng kể từ ngày ký biên bản nghiệm thu.\n• Hỗ trợ kỹ thuật và phản hồi khắc phục sự cố trong vòng 04 giờ làm việc.",
     val annexes: List<ContractAnnex> = emptyList(),
-    val notes: String = ""
+    val notes: String = "",
+    val items: List<QuoteProductItem> = emptyList()
 ) {
     val totalAnnexAdjustment: Double get() = annexes.sumOf { it.netChange }
     val currentAmount: Double get() = originalAmount + totalAnnexAdjustment
@@ -398,7 +441,8 @@ data class ContractNamingRule(
 enum class ProjectStatusType(val label: String, val colorHex: String, val bgHex: String) {
     ON_TRACK("Đúng tiến độ", "#047857", "#DEF7EC"),
     NEARING("Sắp tới hạn", "#D97706", "#FEF3C7"),
-    DELAYED("Chậm trễ", "#E02424", "#FDE8E8")
+    DELAYED("Chậm trễ", "#E02424", "#FDE8E8"),
+    COMPLETED("Hoàn thành", "#059669", "#ECFDF5")
 }
 
 enum class StepStatus {
